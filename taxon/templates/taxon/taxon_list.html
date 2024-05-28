@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Taxa</h1>
+<ul>
+    {% for taxon in taxa %}
+        <li><a href="{% url 'taxon_detail' taxon.pk %}">{{ taxon.name }}</a></li>
+    {% endfor %}
+</ul>
+<a href="{% url 'taxon_create' %}">Add New Taxon</a>
+{% endblock %}
