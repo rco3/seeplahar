@@ -14,6 +14,9 @@ from pathlib import Path
 from decouple import config, Csv
 import os
 
+INTERNAL_IPS = [
+    "127.0.0.1",
+]
 
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
@@ -43,6 +46,13 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'tailwind',
+    'theme',
+    'django_browser_reload',
+    'users',
+    'taxon',
+    'farm',
+    'shop',
 ]
 
 MIDDLEWARE = [
@@ -53,6 +63,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    "django_browser_reload.middleware.BrowserReloadMiddleware",
 ]
 
 ROOT_URLCONF = 'seeplahar.urls'
@@ -124,3 +135,8 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+
+AUTH_USER_MODEL = 'users.CustomUser'
+
+TAILWIND_APP_NAME = 'theme'
