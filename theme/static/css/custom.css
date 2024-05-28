@@ -1,0 +1,13 @@
+/* Ensure dropdown menus stay visible */
+.group:hover .group-hover\:flex {
+    display: flex;
+}
+.group:hover .group-hover\:block {
+    display: block;
+}
+
+/* Add a slight delay for hover out to ensure persistence */
+.group .group-hover\:flex:hover,
+.group .group-hover\:block:hover {
+    display: flex;
+}
