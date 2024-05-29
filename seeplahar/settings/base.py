@@ -82,7 +82,11 @@ ROOT_URLCONF = 'seeplahar.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / 'templates']
+        'DIRS': [
+
+            os.path.join(BASE_DIR, 'seeplahar', 'templates'),
+            os.path.join(BASE_DIR, 'taxon', 'templates'),
+        ]
         ,
         'APP_DIRS': True,
         'OPTIONS': {

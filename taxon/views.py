@@ -57,3 +57,35 @@ class VarietyDeleteView(DeleteView):
     model = Variety
     template_name = 'taxon/variety_confirm_delete.html'
     success_url = reverse_lazy('variety_list')
+
+
+class FruitListView(ListView):
+    model = Variety
+    template_name = 'taxon/fruit_list.html'
+
+    def get_queryset(self):
+        return Variety.objects.filter(taxon__type='Fruit')
+
+
+class VegetableListView(ListView):
+    model = Variety
+    template_name = 'taxon/vegetable_list.html'
+
+    def get_queryset(self):
+        return Variety.objects.filter(taxon__type='Vegetable')
+
+
+class HerbListView(ListView):
+    model = Variety
+    template_name = 'taxon/herb_list.html'
+
+    def get_queryset(self):
+        return Variety.objects.filter(taxon__type='Herb')
+
+
+class FlowerListView(ListView):
+    model = Variety
+    template_name = 'taxon/flower_list.html'
+
+    def get_queryset(self):
+        return Variety.objects.filter(taxon__type='Flower')

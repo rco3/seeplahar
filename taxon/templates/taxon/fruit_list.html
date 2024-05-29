@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block title %}Fruits - Seeplahar{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold">Fruits</h1>
+<ul>
+    {% for variety in object_list %}
+    <li>{{ variety.name }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
