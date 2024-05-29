@@ -1,12 +1,13 @@
 import uuid
 from django.db import models
-from taxon.models import Variety  # Assuming Variety is defined in the taxon app
+from taxon.models import Variety, Photo  # Assuming Variety is defined in the taxon app
 
 class SeedLot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     date_received = models.DateField()
+    photos = models.ManyToManyField(Photo, blank=True, related_name='seedlots')
 
     def __str__(self):
         return f"{self.variety.name} ({self.quantity})"
@@ -16,6 +17,7 @@ class SeedlingBatch(models.Model):
     seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE)
     quantity = models.IntegerField()
     sowing_date = models.DateField()
+    photos = models.ManyToManyField(Photo, blank=True, related_name='seedlingbatches')
 
     def __str__(self):
         return f"SeedlingBatch from {self.seed_lot.variety.name} ({self.quantity})"
@@ -26,6 +28,7 @@ class Plant(models.Model):
     seedling_batch = models.ForeignKey(SeedlingBatch, on_delete=models.CASCADE, null=True, blank=True)
     planting_date = models.DateField()
     location = models.CharField(max_length=200)
+    photos = models.ManyToManyField(Photo, blank=True, related_name='plants')
 
     def __str__(self):
         return f"Plant from {self.seed_lot.variety.name} planted on {self.planting_date}"
@@ -35,6 +38,7 @@ class Harvest(models.Model):
     plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
     harvest_date = models.DateField()
     quantity = models.IntegerField()
+    photos = models.ManyToManyField(Photo, blank=True, related_name='harvests')
 
     def __str__(self):
         return f"Harvest from {self.plant.seed_lot.variety.name} on {self.harvest_date} ({self.quantity})"

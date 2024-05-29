@@ -11,3 +11,16 @@
 .group .group-hover\:block:hover {
     display: flex;
 }
+
+/* Add hover effects */
+a.relative.group {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: 10px;
+    transition: transform 0.3s ease;
+}
+
+a.relative.group:hover {
+    transform: scale(1.05) rotate(1deg);
+}

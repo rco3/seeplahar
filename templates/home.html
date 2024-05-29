@@ -3,6 +3,14 @@
 {% block title %}Home - Seeplahar{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold">Welcome to Seeplahar</h1>
-<p class="mt-4">This is the homepage of Seeplahar.</p>
+<div class="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
+    {% for type in types %}
+    <a href="{{ type.url }}" class="relative group">
+        <img src="{{ type.image }}" alt="{{ type.name }}" class="w-full h-auto">
+        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-xl font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+            {{ type.name }}
+        </div>
+    </a>
+    {% endfor %}
+</div>
 {% endblock %}
