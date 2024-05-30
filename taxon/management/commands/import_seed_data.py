@@ -27,9 +27,10 @@ class Command(BaseCommand):
         with open(csv_file_path1, newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
+                type_value = row['Type'].lower()  # Normalize type to lowercase
                 taxon, _ = Taxon.objects.get_or_create(
                     name=row['Common Name'],
-                    defaults={'species_name': row['Species'], 'type': row['Type']}
+                    defaults={'species_name': row['Species'], 'type': type_value}
                 )
                 variety, created = Variety.objects.get_or_create(
                     name=row['Variety'],
@@ -50,7 +51,7 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 taxon, _ = Taxon.objects.get_or_create(
-                    name=row['Name'],
+                    name='Tomato',
                     defaults={'species_name': row['Species'], 'type': 'vegetable'}
                 )
                 variety, created = Variety.objects.get_or_create(
