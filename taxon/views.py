@@ -88,4 +88,4 @@ class FlowerListView(ListView):
     template_name = 'taxon/flower_list.html'
 
     def get_queryset(self):
-        return Variety.objects.filter(taxon__type='Flower')
+        return Variety.objects.filter(taxon__type__in=['annual', 'perennial'])

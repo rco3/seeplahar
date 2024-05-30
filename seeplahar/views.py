@@ -1,7 +1,7 @@
-from django.views.generic import TemplateView
-from taxon.models import Photo
-from django.urls import reverse_lazy
 
+from taxon.models import Photo
+from django.views.generic import TemplateView
+from django.urls import reverse_lazy
 
 class HomePageView(TemplateView):
     template_name = 'home.html'
@@ -29,5 +29,30 @@ class HomePageView(TemplateView):
                 'url': reverse_lazy('taxon:flower-list'),
                 'image': '/static/images/flower.jpg'
             },
+            # {
+            #     'name': 'Grasses',
+            #     'url': reverse_lazy('taxon:grass-list'),
+            #     'image': '/static/images/grass.jpg'
+            # },
+            # {
+            #     'name': 'Shrubs',
+            #     'url': reverse_lazy('taxon:shrub-list'),
+            #     'image': '/static/images/shrub.jpg'
+            # },
+            # {
+            #     'name': 'Trees',
+            #     'url': reverse_lazy('taxon:tree-list'),
+            #     'image': '/static/images/tree.jpg'
+            # },
+            # {
+            #     'name': 'Succulents',
+            #     'url': reverse_lazy('taxon:succulent-list'),
+            #     'image': '/static/images/succulent.jpg'
+            # },
+            # {
+            #     'name': 'Others',
+            #     'url': reverse_lazy('taxon:other-list'),
+            #     'image': '/static/images/other.jpg'
+            # },
         ]
         return context

@@ -5,8 +5,8 @@ from taxon.models import Variety, Photo  # Assuming Variety is defined in the ta
 class SeedLot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    date_received = models.DateField()
+    quantity = models.IntegerField(null=True, blank=True)
+    date_received = models.DateField(null=True, blank=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='seedlots')
 
     def __str__(self):
@@ -15,13 +15,14 @@ class SeedLot(models.Model):
 class SeedlingBatch(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE)
-    quantity = models.IntegerField()
-    sowing_date = models.DateField()
+    quantity = models.IntegerField(null=True, blank=True)
+    sowing_date = models.DateField(null=True, blank=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='seedlingbatches')
 
     def __str__(self):
         return f"SeedlingBatch from {self.seed_lot.variety.name} ({self.quantity})"
-
+    class Meta:
+        verbose_name_plural = "Seedling Batches"
 class Plant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, null=True, blank=True)

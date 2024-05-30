@@ -1,9 +1,10 @@
-{% extends "../../../seeplahar/templates/base.html" %}
+{% extends "base.html" %}
 {% block content %}
-<h1>{{ taxon.name }}</h1>
-<p>Species: {{ taxon.species_name }}</p>
-<p>Type: {{ taxon.get_type_display }}</p>
-<p>{{ taxon.description }}</p>
-<a href="{% url 'taxon_update' taxon.pk %}">Edit</a>
-<a href="{% url 'taxon_delete' taxon.pk %}">Delete</a>
+  <h1>{{ variety.name }}</h1>
+  <p>{{ variety.description }}</p>
+  <ul>
+    {% for characteristic in variety.characteristics.all %}
+      <li>{{ characteristic.name }}: {{ characteristic.value }}</li>
+    {% endfor %}
+  </ul>
 {% endblock %}

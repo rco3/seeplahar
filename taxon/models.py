@@ -19,7 +19,9 @@ class Taxon(models.Model):
     GRASS = 'grass'
     SHRUB = 'shrub'
     TREE = 'tree'
-    CACTUS = 'cactus'
+    SUCCULENT = 'succulent'
+    ANNUAL = 'annual'
+    PERENNIAL = 'perennial'
     OTHER = 'other'
 
     TYPE_CHOICES = [
@@ -30,7 +32,9 @@ class Taxon(models.Model):
         (GRASS, 'Grass'),
         (SHRUB, 'Shrub'),
         (TREE, 'Tree'),
-        (CACTUS, 'Cactus'),
+        (SUCCULENT, 'Succulent'),
+        (ANNUAL, 'Annual'),
+        (PERENNIAL, 'Perennial'),
         (OTHER, 'Other'),
     ]
 
@@ -43,6 +47,9 @@ class Taxon(models.Model):
 
     def __str__(self):
         return self.name
+
+    class Meta:
+        verbose_name_plural = "Taxa"
 
 
 class Synonym(models.Model):
@@ -65,4 +72,14 @@ class Variety(models.Model):
     def __str__(self):
         return self.name
 
+    class Meta:
+        verbose_name_plural = "Varieties"
 
+class Characteristic(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+    value = models.CharField(max_length=100)
+    variety = models.ForeignKey(Variety, related_name='characteristics', on_delete=models.CASCADE)
+
+    def __str__(self):
+        return f"{self.name}: {self.value}"
