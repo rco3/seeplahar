@@ -60,27 +60,28 @@ class VarietyDeleteView(DeleteView):
 
 
 class FruitListView(ListView):
-    model = Variety
+    model = Taxon
     template_name = 'taxon/fruit_list.html'
 
     def get_queryset(self):
-        return Variety.objects.filter(taxon__type='Fruit')
+        return Taxon.objects.filter(type='fruit')
 
 
 class VegetableListView(ListView):
-    model = Variety
+    model = Taxon
     template_name = 'taxon/vegetable_list.html'
+    context_object_name = 'vegetables'
 
     def get_queryset(self):
-        return Variety.objects.filter(taxon__type='Vegetable')
+        return Taxon.objects.filter(type='vegetable')
 
 
 class HerbListView(ListView):
-    model = Variety
+    model = Taxon
     template_name = 'taxon/herb_list.html'
 
     def get_queryset(self):
-        return Variety.objects.filter(taxon__type='Herb')
+        return Taxon.objects.filter(type='herb')
 
 
 class FlowerListView(ListView):
@@ -88,4 +89,4 @@ class FlowerListView(ListView):
     template_name = 'taxon/flower_list.html'
 
     def get_queryset(self):
-        return Variety.objects.filter(taxon__type__in=['annual', 'perennial'])
+        return Taxon.objects.filter(type__in=['annual', 'perennial'])

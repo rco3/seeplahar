@@ -1,12 +1,26 @@
 {% extends "base.html" %}
 
-{% block title %}Vegetables - Seeplahar{% endblock %}
+{% block title %}Vegetables{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold">Vegetables</h1>
+<h1>Vegetables</h1>
 <ul>
-    {% for variety in object_list %}
-    <li>{{ variety.name }}</li>
+    {% for vegetable in vegetables %}
+    <li>
+        <h2>{{ vegetable.name }}</h2>
+        <p><strong>Species:</strong> {{ vegetable.species_name }}</p>
+        <p><strong>Description:</strong> {{ vegetable.description }}</p>
+        <p><strong>Varieties:</strong></p>
+        <ul>
+            {% for variety in vegetable.varieties.all %}
+            <li>{{ variety.name }} - {{ variety.description }}</li>
+            {% empty %}
+            <li>No varieties available.</li>
+            {% endfor %}
+        </ul>
+    </li>
+    {% empty %}
+    <li>No vegetables available.</li>
     {% endfor %}
 </ul>
 {% endblock %}
