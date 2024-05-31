@@ -4,8 +4,9 @@ from taxon.models import Variety, Photo  # Assuming Variety is defined in the ta
 
 class SeedLot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    variety = models.ForeignKey(Variety, on_delete=models.CASCADE)
+    variety = models.ForeignKey(Variety, related_name='seed_lots', on_delete=models.CASCADE)
     quantity = models.IntegerField(null=True, blank=True)
+    origin = models.CharField(max_length=255, blank=True, null=True)  # Adding origin field
     date_received = models.DateField(null=True, blank=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='seedlots')
 
