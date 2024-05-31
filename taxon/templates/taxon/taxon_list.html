@@ -1,10 +1,22 @@
-{% extends "../../../seeplahar/templates/base.html" %}
+{% extends "base.html" %}
+{% load static %}
+
+{% block title %}{{ taxon_type }}{% endblock %}
+
 {% block content %}
-<h1>Taxa</h1>
-<ul>
-    {% for taxon in taxa %}
-        <li><a href="{% url 'taxon_detail' taxon.pk %}">{{ taxon.name }}</a></li>
+<h1 class="text-2xl font-bold mb-4">{{ taxon_type }}</h1>
+<div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
+    {% for taxon in taxons %}
+    <a href="{% url 'taxon:variety-list' type=taxon.type taxon_id=taxon.id %}" class="relative group block bg-white rounded-lg shadow-lg overflow-hidden">
+        <img src="{% static 'images/' %}{{ taxon.name|lower }}.jpg" alt="{{ taxon.name }}" class="w-full h-40 object-cover">
+        <div class="p-4">
+            <h2 class="text-lg font-semibold">{{ taxon.name }}</h2>
+            <p class="text-sm text-gray-600">{{ taxon.species_name }}</p>
+        </div>
+        <div class="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50 text-white text-xl font-bold opacity-0 group-hover:opacity-100 transition-opacity">
+            {{ taxon.name }}
+        </div>
+    </a>
     {% endfor %}
-</ul>
-<a href="{% url 'taxon_create' %}">Add New Taxon</a>
+</div>
 {% endblock %}

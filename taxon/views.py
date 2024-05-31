@@ -1,92 +1,55 @@
-from django.urls import reverse_lazy
-from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+import logging
+from django.views.generic import ListView, DetailView
 from .models import Taxon, Variety
 
-# Taxon Views
+logger = logging.getLogger(__name__)
+
 class TaxonListView(ListView):
     model = Taxon
     template_name = 'taxon/taxon_list.html'
-    context_object_name = 'taxa'
+    context_object_name = 'taxons'
 
-class TaxonDetailView(DetailView):
-    model = Taxon
-    template_name = 'taxon/taxon_detail.html'
-    context_object_name = 'taxon'
+    def get_context_data(self, **kwargs):
+        logger.debug(f"TaxonListView get_context_data called with kwargs: {kwargs}")
+        context = super().get_context_data(**kwargs)
+        context['taxon_type'] = self.kwargs.get('type').capitalize()
+        return context
 
-class TaxonCreateView(CreateView):
-    model = Taxon
-    template_name = 'taxon/taxon_form.html'
-    fields = ['name', 'species_name', 'type', 'description']
-    success_url = reverse_lazy('taxon_list')
+    def get_queryset(self):
+        logger.debug(f"TaxonListView get_queryset called with kwargs: {self.kwargs}")
+        taxon_type = self.kwargs.get('type')
+        if taxon_type == 'flower':
+            return Taxon.objects.filter(type__in=['annual', 'perennial'])
+        else:
+            return Taxon.objects.filter(type=taxon_type)
 
-class TaxonUpdateView(UpdateView):
-    model = Taxon
-    template_name = 'taxon/taxon_form.html'
-    fields = ['name', 'species_name', 'type', 'description']
-    success_url = reverse_lazy('taxon_list')
-
-class TaxonDeleteView(DeleteView):
-    model = Taxon
-    template_name = 'taxon/taxon_confirm_delete.html'
-    success_url = reverse_lazy('taxon_list')
-
-# Variety Views
 class VarietyListView(ListView):
     model = Variety
     template_name = 'taxon/variety_list.html'
     context_object_name = 'varieties'
+
+    def get_context_data(self, **kwargs):
+        logger.debug(f"VarietyListView get_context_data called with kwargs: {kwargs}")
+        context = super().get_context_data(**kwargs)
+        context['taxon'] = Taxon.objects.get(id=self.kwargs.get('taxon_id'))
+        return context
+
+    def get_queryset(self):
+        logger.debug(f"VarietyListView get_queryset called with kwargs: {self.kwargs}")
+        return Variety.objects.filter(taxon_id=self.kwargs.get('taxon_id'))
 
 class VarietyDetailView(DetailView):
     model = Variety
     template_name = 'taxon/variety_detail.html'
     context_object_name = 'variety'
 
-class VarietyCreateView(CreateView):
-    model = Variety
-    template_name = 'taxon/variety_form.html'
-    fields = ['name', 'taxon', 'description', 'origin']
-    success_url = reverse_lazy('variety_list')
-
-class VarietyUpdateView(UpdateView):
-    model = Variety
-    template_name = 'taxon/variety_form.html'
-    fields = ['name', 'taxon', 'description', 'origin']
-    success_url = reverse_lazy('variety_list')
-
-class VarietyDeleteView(DeleteView):
-    model = Variety
-    template_name = 'taxon/variety_confirm_delete.html'
-    success_url = reverse_lazy('variety_list')
+    def get_context_data(self, **kwargs):
+        logger.debug(f"VarietyDetailView get_context_data called with kwargs: {kwargs}")
+        context = super().get_context_data(**kwargs)
+        return context
 
 
-class FruitListView(ListView):
+class TaxonDetailView(DetailView):
     model = Taxon
-    template_name = 'taxon/fruit_list.html'
-
-    def get_queryset(self):
-        return Taxon.objects.filter(type='fruit')
-
-
-class VegetableListView(ListView):
-    model = Taxon
-    template_name = 'taxon/vegetable_list.html'
-    context_object_name = 'vegetables'
-
-    def get_queryset(self):
-        return Taxon.objects.filter(type='vegetable')
-
-
-class HerbListView(ListView):
-    model = Taxon
-    template_name = 'taxon/herb_list.html'
-
-    def get_queryset(self):
-        return Taxon.objects.filter(type='herb')
-
-
-class FlowerListView(ListView):
-    model = Variety
-    template_name = 'taxon/flower_list.html'
-
-    def get_queryset(self):
-        return Taxon.objects.filter(type__in=['annual', 'perennial'])
+    template_name = 'taxon/taxon_detail.html'
+    context_object_name = 'taxon'
