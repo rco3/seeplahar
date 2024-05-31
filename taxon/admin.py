@@ -10,9 +10,9 @@ class CharacteristicInline(admin.StackedInline):
 @admin.register(Variety)
 class VarietyAdmin(admin.ModelAdmin):
     inlines = [CharacteristicInline]
-    list_display = ('name', 'taxon', 'description', 'origin')
-    search_fields = ('name', 'taxon__name', 'origin')
-    list_filter = ('taxon', 'origin')
+    list_display = ('name', 'taxon', 'description')
+    search_fields = ('name', 'taxon__name')
+    list_filter = ('taxon', 'description')
 
 
 @admin.register(Characteristic)

@@ -66,7 +66,7 @@ class Variety(models.Model):
     name = models.CharField(max_length=100)
     taxon = models.ForeignKey(Taxon, related_name='varieties', on_delete=models.CASCADE)
     description = models.TextField(blank=True, null=True)
-    origin = models.CharField(max_length=100, blank=True, null=True)
+    # origin = models.CharField(max_length=100, blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='varieties')
 
     def __str__(self):

@@ -44,9 +44,11 @@ class VarietyDetailView(DetailView):
     context_object_name = 'variety'
 
     def get_context_data(self, **kwargs):
-        logger.debug(f"VarietyDetailView get_context_data called with kwargs: {kwargs}")
         context = super().get_context_data(**kwargs)
-        return context
+        seed_lots = self.object.seedlot_set.all()  # Ensure this relationship is correct
+        logger.debug(f'Seed lots for variety {self.object.name}: {seed_lots}')
+        context['seed_lots'] = seed_lots
+        return contextxs
 
 
 class TaxonDetailView(DetailView):
