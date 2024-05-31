@@ -22,8 +22,11 @@ from .views import GenericDetailView
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path("__reload__/", include("django_browser_reload.urls")),
-    path('taxon/', include('taxon.urls', namespace='taxon')),
     path('', HomePageView.as_view(), name='home'),
+    path('__reload__/', include('django_browser_reload.urls')),
+    path('taxon/', include('taxon.urls', namespace='taxon')),
+    path('farm/', include('farm.urls', namespace='farm')),
+    # path('shop/', include('shop.urls', namespace='shop')),
+    # path('users/', include('users.urls', namespace='users')),
     path('<uuid:pk>/', GenericDetailView.as_view(), name='generic-detail'),
 ]

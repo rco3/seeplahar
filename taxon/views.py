@@ -1,8 +1,10 @@
 import logging
+from django.shortcuts import render
 from django.views.generic import ListView, DetailView
 from .models import Taxon, Variety
 
 logger = logging.getLogger(__name__)
+
 
 class TaxonListView(ListView):
     model = Taxon
@@ -45,13 +47,18 @@ class VarietyDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        seed_lots = self.object.seedlot_set.all()  # Ensure this relationship is correct
+        seed_lots = self.object.seed_lots.all()  # Ensure this relationship is correct
         logger.debug(f'Seed lots for variety {self.object.name}: {seed_lots}')
         context['seed_lots'] = seed_lots
-        return contextxs
+        return context
 
 
 class TaxonDetailView(DetailView):
     model = Taxon
     template_name = 'taxon/taxon_detail.html'
     context_object_name = 'taxon'
+
+
+def TaxonTestListView(request):
+    taxons = Taxon.objects.all()
+    return render(request, 'taxon/taxon_test_list.html', {'taxons': taxons})

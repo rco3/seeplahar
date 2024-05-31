@@ -1,9 +1,11 @@
 from taxon.models import Photo
 from django.views.generic import TemplateView
-from django.urls import reverse_lazy
-from django.shortcuts import render, get_object_or_404
+from django.http import HttpResponseRedirect, Http404
+from django.urls import reverse_lazy, reverse
+from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
-from taxon.models import Taxon, Variety
+from taxon.models import Variety
+from farm.models import Event, Plant, SeedLot, SeedlingBatch, Harvest
 
 class HomePageView(TemplateView):
     template_name = 'home.html'
@@ -35,21 +37,48 @@ class HomePageView(TemplateView):
         return context
 
 
-
 class GenericDetailView(View):
-    def get(self, request, pk):
-        # Attempt to get the object by UUID from different models
-        try:
-            obj = get_object_or_404(Variety, pk=pk)
-            template_name = 'taxon/variety_detail.html'
-            context = {'variety': obj, 'type': 'Variety'}
-        except:
-            try:
-                obj = get_object_or_404(Taxon, pk=pk)
-                template_name = 'taxon/taxon_detail.html'
-                context = {'taxon': obj, 'type': 'Taxon'}
-            except:
-                # Handle the case where no object is found
-                return render(request, '404.html', status=404)
 
-        return render(request, template_name, context)
+    def get(self, request, *args, **kwargs):
+        uuid = kwargs.get('pk')
+
+        # Try to get a Variety
+        try:
+            variety = Variety.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('taxon:variety-detail', kwargs={'pk': uuid}))
+        except Variety.DoesNotExist:
+            pass
+
+        # Try to get other farm objects and redirect accordingly
+        try:
+            event = Event.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('farm:event-add', kwargs={'pk': uuid}))
+        except Event.DoesNotExist:
+            pass
+
+        try:
+            plant = Plant.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('farm:plant-detail', kwargs={'pk': uuid}))
+        except Plant.DoesNotExist:
+            pass
+
+        try:
+            seed_lot = SeedLot.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('farm:seedlot-detail', kwargs={'pk': uuid}))
+        except SeedLot.DoesNotExist:
+            pass
+
+        try:
+            seedling_batch = SeedlingBatch.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('farm:seedlingbatch-detail', kwargs={'pk': uuid}))
+        except SeedlingBatch.DoesNotExist:
+            pass
+
+        try:
+            harvest = Harvest.objects.get(pk=uuid)
+            return HttpResponseRedirect(reverse('farm:harvest-detail', kwargs={'pk': uuid}))
+        except Harvest.DoesNotExist:
+            pass
+
+        raise Http404("Object does not exist")
+
