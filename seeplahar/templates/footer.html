@@ -1,29 +1,78 @@
-<footer class="bg-gray-800 text-white py-4 fixed bottom-0 w-full">
+<style>
+    /* Ensure dropdown menus stay visible */
+    .group:hover .group-hover\:flex {
+        display: flex;
+    }
+    .group:hover .group-hover\:block {
+        display: block;
+    }
+    /* Add a slight delay for hover out to ensure persistence */
+    .group .group-hover\:flex:hover,
+    .group .group-hover\:block:hover {
+        display: flex;
+    }
+
+    /* Add hover effects */
+    a.relative.group {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    a.relative.group:hover {
+        transform: scale(1.05) rotate(1deg);
+    }
+</style>
+
+<footer class="bg-primary-dark text-primary-lighter py-4 fixed bottom-0 w-full">
     <div class="container mx-auto">
-        <nav class="flex justify-center">
+        <nav class="flex justify-between">
             <ul class="flex space-x-4">
+                <!-- HOME icon link -->
+                <li class="group relative">
+                    <a href="{% url 'home' %}" class="hover:underline p-2 block">
+                        <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9.75L12 3l9 6.75v11.25a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-5.25H9.75v5.25a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75V9.75z"></path>
+                        </svg>
+                    </a>
+                </li>
                 <li class="group relative">
                     <a href="#" class="hover:underline p-2 block">Type</a>
-                    <ul class="absolute left-0 bottom-full mb-2 hidden group-hover:flex flex-col bg-gray-700 p-2 -mb-2 rounded-lg">
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Fruits</a></li>
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Vegetables</a></li>
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Herbs</a></li>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="{% url 'taxon:taxon-list' type='fruit' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Fruits</a></li>
+                        <li><a href="{% url 'taxon:taxon-list' type='vegetable' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Vegetables</a></li>
+                        <li><a href="{% url 'taxon:taxon-list' type='herb' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Herbs</a></li>
+                        <li><a href="{% url 'taxon:taxon-list' type='flower' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Flowers</a></li>
                     </ul>
                 </li>
                 <li class="group relative">
                     <a href="#" class="hover:underline p-2 block">Farm</a>
-                    <ul class="absolute left-0 bottom-full mb-2 hidden group-hover:flex flex-col bg-gray-700 p-2 -mb-2 rounded-lg">
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Operations</a></li>
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Histories</a></li>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Operations</a></li>
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Histories</a></li>
                     </ul>
                 </li>
                 <li class="group relative">
                     <a href="#" class="hover:underline p-2 block">Shop</a>
-                    <ul class="absolute left-0 bottom-full mb-2 hidden group-hover:flex flex-col bg-gray-700 p-2 -mb-2 rounded-lg">
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Seeds</a></li>
-                        <li><a href="#" class="block px-4 py-2 hover:bg-gray-600">Produce</a></li>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Seeds</a></li>
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Produce</a></li>
                     </ul>
                 </li>
+            </ul>
+            <ul class="flex space-x-4">
+                <!-- Login/Logout link -->
+                {% if user.is_authenticated %}
+                <li class="group relative">
+                    <a href="{% url 'logout' %}" class="hover:underline p-2 block">Logout ({{ user.username }})</a>
+                </li>
+                {% else %}
+                <li class="group relative">
+                    <a href="{% url 'login' %}" class="hover:underline p-2 block">Login</a>
+                </li>
+                {% endif %}
             </ul>
         </nav>
     </div>

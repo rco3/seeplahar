@@ -164,6 +164,9 @@ AUTHENTICATION_BACKENDS = [
     'django.contrib.auth.backends.ModelBackend',
 ]
 
+# Redirect URL after login
+LOGIN_REDIRECT_URL = '/'
+
 # Internationalization
 # https://docs.djangoproject.com/en/5.0/topics/i18n/
 

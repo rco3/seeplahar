@@ -4,8 +4,27 @@ from django.http import HttpResponseRedirect, Http404
 from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
+from django.contrib.auth import login as auth_login
 from taxon.models import Variety
 from farm.models import Event, Plant, SeedLot, SeedlingBatch, Harvest
+from django.contrib.auth import logout
+from django.shortcuts import redirect, render
+from django.contrib.auth.forms import AuthenticationForm
+
+class CustomLoginView(View):
+    def get(self, request, *args, **kwargs):
+        form = AuthenticationForm()
+        return render(request, 'registration/login.html', {'form': form})
+
+    def post(self, request, *args, **kwargs):
+        form = AuthenticationForm(data=request.POST)
+        if form.is_valid():
+            auth_login(request, form.get_user())
+            return redirect('/')
+        return render(request, 'registration/login.html', {'form': form})
+def custom_logout(request):
+    logout(request)
+    return redirect('/')
 
 class HomePageView(TemplateView):
     template_name = 'home.html'

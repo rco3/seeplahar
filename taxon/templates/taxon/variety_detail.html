@@ -4,37 +4,37 @@
 {% block title %}{{ variety.name }} - Seeplahar{% endblock %}
 
 {% block content %}
-<div class="container mx-auto p-4">
+<div class="container mx-auto p-4 bg-primary-lighter rounded-lg">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden flex">
         <div class="w-2/3 p-4">
-            <div class="flex items-center justify-between border-b pb-4 mb-4">
-                <h1 class="text-2xl font-bold">{{ variety.name }}</h1>
-                <a href="{% url 'taxon:taxon-detail' pk=variety.taxon.id %}" class="text-gray-600 hover:underline">{{ variety.taxon.name }}</a>
+            <div class="flex items-center justify-between bg-primary-light p-4 mb-4 rounded-t-lg">
+                <h1 class="text-4xl font-bold text-primary-dark">{{ variety.name }}</h1>
+                <a href="{% url 'taxon:taxon-detail' pk=variety.taxon.id %}" class="text-primary-dark hover:underline">{{ variety.taxon.name }}</a>
             </div>
-            <div>
-                <p class="text-gray-700">{{ variety.description }}</p>
+            <div class="p-4">
+                <p class="text-primary-dark">{{ variety.description }}</p>
                 <div class="mt-4">
-                    <h2 class="text-lg font-semibold">Seed Lots</h2>
-                    <ul>
+                    <h2 class="text-2xl font-semibold text-primary-dark">Seed Lots</h2>
+                    <ul class="list-disc list-inside">
                         {% for seed_lot in seed_lots %}
-                            <li>{{ seed_lot.origin }}</li>
+                            <li class="text-primary">{{ seed_lot.origin }}</li>
                         {% empty %}
-                            <li>No seed lots available.</li>
+                            <li class="text-primary">No seed lots available.</li>
                         {% endfor %}
                     </ul>
                 </div>
                 <div class="mt-4">
-                    <table class="w-full text-left mt-2">
+                    <table class="w-full text-left mt-2 bg-white rounded-lg">
                         <thead>
                             <tr>
-                                <th class="text-center" colspan="2">Characteristics</th>
+                                <th class="text-center text-primary-dark" colspan="2">Characteristics</th>
                             </tr>
                         </thead>
                         <tbody>
                             {% for characteristic in variety.characteristics.all %}
                                 <tr class="border-b">
-                                    <td class="pr-4 font-semibold text-right">{{ characteristic.name }}</td>
-                                    <td class="pl-4 text-left">{{ characteristic.value }}</td>
+                                    <td class="pr-4 font-semibold text-right bg-primary-light rounded-l-lg">{{ characteristic.name }}</td>
+                                    <td class="pl-4 text-left text-primary-dark bg-white rounded-r-lg">{{ characteristic.value }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>
@@ -43,8 +43,7 @@
             </div>
         </div>
         <div class="w-1/3 p-4 flex items-center justify-center">
-            <!-- Placeholder for the photo -->
-            <div class="bg-gray-200 h-64 w-full flex items-center justify-center">
+            <div class="bg-gray-200 h-64 w-full flex items-center justify-center rounded-lg">
                 <span class="text-gray-500">Photo Placeholder</span>
             </div>
         </div>

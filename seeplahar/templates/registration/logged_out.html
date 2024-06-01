@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block title %}Logged Out{% endblock %}
+
+{% block content %}
+<div class="container mx-auto text-center py-8">
+    <h1 class="text-3xl font-bold">You have been logged out</h1>
+    <p class="mt-4">Thank you for visiting. <a href="{% url 'home' %}" class="text-accent">Return to Home</a></p>
+</div>
+{% endblock %}

@@ -44,7 +44,18 @@ module.exports = {
         // '../../**/*.py'
     ],
     theme: {
-        extend: {},
+        extend: {
+          colors: {
+            primary: {
+              light: '#e0ffe0',  // Lighter green
+              DEFAULT: '#8b008b', // Dark violet
+              dark: '#4b004b',
+              lighter: '#f5fff5',  // Even lighter green for the page background
+            },
+            accent: '#ffdd57', // Bold, slightly orange-ish yellow
+          },
+
+        },
     },
     plugins: [
         /**
