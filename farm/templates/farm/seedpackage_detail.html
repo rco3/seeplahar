@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Seed Package Detail{% endblock %}
+
+{% block content %}
+<h1>Seed Package</h1>
+<p>{{ object.description }}</p>
+<p>Quantity: {{ object.quantity }} {{ object.quantity_units }}</p>
+<p>Date Packaged: {{ object.date_packaged }}</p>
+
+<h2>Photos</h2>
+<ul>
+    {% for photo in photos %}
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.caption }}"></li>
+    {% endfor %}
+</ul>
+{% endblock %}

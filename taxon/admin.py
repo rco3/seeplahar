@@ -36,11 +36,3 @@ class SynonymAdmin(admin.ModelAdmin):
     search_fields = ('name', 'taxon__name')
     list_filter = ('taxon',)
     fields = ('name', 'taxon')
-
-
-@admin.register(Photo)
-class PhotoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'item_type', 'item_id')
-    search_fields = ('item_type', 'item_id')
-    list_filter = ('item_type',)
-    fields = ('image', 'item_type', 'item_id')

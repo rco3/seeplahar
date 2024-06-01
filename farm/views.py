@@ -1,31 +1,49 @@
-from django.views.generic import DetailView, CreateView
-from .models import Plant, SeedLot, SeedlingBatch, Harvest, Event
-
-class PlantDetailView(DetailView):
-    model = Plant
-    template_name = 'farm/plant_detail.html'
-    context_object_name = 'plant'
+from django.views.generic import ListView, DetailView
+from .models import SeedLot, Plant, Harvest, SeedlingBatch
+from django.urls import reverse_lazy
+from media.models import Photo
+from django.views.generic.edit import CreateView
+from .models import Event
 
 class SeedLotDetailView(DetailView):
     model = SeedLot
     template_name = 'farm/seedlot_detail.html'
-    context_object_name = 'seedlot'
 
-class SeedlingBatchDetailView(DetailView):
-    model = SeedlingBatch
-    template_name = 'farm/seedlingbatch_detail.html'
-    context_object_name = 'seedlingbatch'
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['photos'] = Photo.objects.filter(content_type__model='seedlot', object_id=self.object.id)
+        return context
+
+class PlantDetailView(DetailView):
+    model = Plant
+    template_name = 'farm/plant_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['photos'] = Photo.objects.filter(content_type__model='plant', object_id=self.object.id)
+        return context
 
 class HarvestDetailView(DetailView):
     model = Harvest
     template_name = 'farm/harvest_detail.html'
-    context_object_name = 'harvest'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['photos'] = Photo.objects.filter(content_type__model='harvest', object_id=self.object.id)
+        return context
+
+class SeedlingBatchDetailView(DetailView):
+    model = SeedlingBatch
+    template_name = 'farm/seedlingbatch_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['photos'] = Photo.objects.filter(content_type__model='seedlingbatch', object_id=self.object.id)
+        return context
+
 
 class EventAddView(CreateView):
     model = Event
-    fields = ['event_type', 'description', 'date']
     template_name = 'farm/event_form.html'
-
-    def form_valid(self, form):
-        form.instance.object_id = self.kwargs['pk']
-        return super().form_valid(form)
+    fields = ['type', 'date', 'description', 'related_item']
+    success_url = reverse_lazy('farm:event-list')

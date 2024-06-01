@@ -1,59 +1,90 @@
-import uuid
 from django.db import models
-from taxon.models import Variety, Photo  # Assuming Variety is defined in the taxon app
+import uuid
+from users.models import Partner
+from datetime import datetime
 
 class SeedLot(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    variety = models.ForeignKey(Variety, related_name='seed_lots', on_delete=models.CASCADE)
-    quantity = models.IntegerField(null=True, blank=True)
-    origin = models.CharField(max_length=255, blank=True, null=True)  # Adding origin field
-    date_received = models.DateField(null=True, blank=True)
-    photos = models.ManyToManyField(Photo, blank=True, related_name='seedlots')
+    variety = models.ForeignKey('taxon.Variety', on_delete=models.CASCADE, related_name='seed_lots')
+    name = models.CharField(max_length=100, default='New Seedlot')
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
+    units = models.CharField(max_length=50, null=True, blank=True)
+    date_received = models.DateField(default=datetime.now)
+    origin = models.CharField(max_length=100, null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True)
+    source = models.ForeignKey('Harvest', null=True, blank=True, on_delete=models.SET_NULL)
+
 
     def __str__(self):
-        return f"{self.variety.name} ({self.quantity})"
+        return self.name
 
-class SeedlingBatch(models.Model):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE)
-    quantity = models.IntegerField(null=True, blank=True)
-    sowing_date = models.DateField(null=True, blank=True)
-    photos = models.ManyToManyField(Photo, blank=True, related_name='seedlingbatches')
-
-    def __str__(self):
-        return f"SeedlingBatch from {self.seed_lot.variety.name} ({self.quantity})"
-    class Meta:
-        verbose_name_plural = "Seedling Batches"
 class Plant(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, null=True, blank=True)
-    seedling_batch = models.ForeignKey(SeedlingBatch, on_delete=models.CASCADE, null=True, blank=True)
-    planting_date = models.DateField()
-    location = models.CharField(max_length=200)
-    photos = models.ManyToManyField(Photo, blank=True, related_name='plants')
+    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, related_name='plants', null=True, blank=True)
+    seedling_batch = models.ForeignKey('SeedlingBatch', on_delete=models.CASCADE, related_name='plants', null=True, blank=True)
+    partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True)
+    variety = models.ForeignKey('taxon.Variety', null=True, blank=True, on_delete=models.CASCADE)
+    date = models.DateField(default=datetime.now)
+    location = models.CharField(max_length=255, null=True, blank=True)
+    source = models.ForeignKey('SeedLot', null=True, blank=True, on_delete=models.SET_NULL)
+    status = models.CharField(max_length=50, choices=[('growing', 'Growing'), ('harvested', 'Harvested'), ('failed', 'Failed')], default=('growing', 'Growing'))
 
     def __str__(self):
-        return f"Plant from {self.seed_lot.variety.name} planted on {self.planting_date}"
+        return f'{self.variety.name} - {self.location}'
+
 
 class Harvest(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    plant = models.ForeignKey(Plant, on_delete=models.CASCADE)
-    harvest_date = models.DateField()
-    quantity = models.IntegerField()
-    photos = models.ManyToManyField(Photo, blank=True, related_name='harvests')
+    plants = models.ManyToManyField('Plant', related_name='harvests')
+    date = models.DateField(default=datetime.now)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    units = models.CharField(max_length=50, null=True, blank=True)
+    description = models.TextField(blank=True, null=True)
+    partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True)
 
     def __str__(self):
-        return f"Harvest from {self.plant.seed_lot.variety.name} on {self.harvest_date} ({self.quantity})"
+        return f'Harvest on {self.date}'
+
+
+class SeedlingBatch(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, related_name='seedling_batches')
+    date = models.DateField(default=datetime.now)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
+    units = models.CharField(max_length=50, default='seeds')
+    location = models.CharField(max_length=100, null=True, blank=True)
+    status = models.CharField(max_length=50, choices=[('germinating', 'Germinating'), ('transplanted', 'Transplanted'), ('failed', 'Failed')], default=('germinating', 'Germinating'))
+    parent_batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_batches')
+    source = models.ForeignKey('SeedLot', null=True, blank=True, on_delete=models.SET_NULL)
+    variety = models.ForeignKey('taxon.Variety', null=True, blank=True, on_delete=models.SET_NULL)
+
+    def __str__(self):
+        return f'{self.seed_lot.name} batch sown on {self.date}'
+
 
 class Event(models.Model):
+    EVENT_TYPES = [
+        ('collection', 'Collection'),
+        ('fermentation_start', 'Fermentation Start'),
+        ('fermentation_end', 'Fermentation End'),
+        ('storage', 'Storage'),
+        ('planting', 'Planting'),
+        ('germination', 'Germination'),
+        ('first_true_leaves', 'First True Leaves'),
+        ('transplant', 'Transplant'),
+        ('watering', 'Watering'),
+        ('fertilizing', 'Fertilizing'),
+        ('pruning', 'Pruning'),
+        ('treatment', 'Treatment'),
+        ('packaging', 'Packaging'),
+        ('sale', 'Sale'),
+    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    event_type = models.CharField(max_length=50)  # e.g., Planting, Watering, Fertilizing, etc.
-    description = models.TextField()
-    event_date = models.DateField()
-    plant = models.ForeignKey(Plant, on_delete=models.CASCADE, null=True, blank=True)
-    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, null=True, blank=True)
-    seedling_batch = models.ForeignKey(SeedlingBatch, on_delete=models.CASCADE, null=True, blank=True)
-    harvest = models.ForeignKey(Harvest, on_delete=models.CASCADE, null=True, blank=True)
+    type = models.CharField(max_length=50, choices=EVENT_TYPES, default='collection')
+    date = models.DateField(default=datetime.now)
+    description = models.TextField(null=True, blank=True)
+    related_item = models.ForeignKey('self', null=True, blank=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return f"{self.event_type} on {self.event_date}"
+        return f'Event: {self.type} on {self.date}'
