@@ -97,6 +97,7 @@ INSTALLED_APPS = [
     'taxon',
     'farm',
     'shop',
+    'media',
 ]
 
 MIDDLEWARE = [

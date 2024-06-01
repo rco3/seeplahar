@@ -47,9 +47,8 @@ class VarietyDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        seed_lots = self.object.seed_lots.all()  # Ensure this relationship is correct
-        logger.debug(f'Seed lots for variety {self.object.name}: {seed_lots}')
-        context['seed_lots'] = seed_lots
+        context['seed_lots'] = self.object.seed_lots.all()
+        context['photos'] = self.object.photos.all()
         return context
 
 

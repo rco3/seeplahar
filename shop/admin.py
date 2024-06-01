@@ -1,3 +1,6 @@
 from django.contrib import admin
+from .models import SeedPackage, ProducePackage, PlantPackage
 
-# Register your models here.
+admin.site.register(SeedPackage)
+admin.site.register(ProducePackage)
+admin.site.register(PlantPackage)

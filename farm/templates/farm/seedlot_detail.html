@@ -1,0 +1,18 @@
+{% extends "base.html" %}
+
+{% block title %}Seed Lot Detail{% endblock %}
+
+{% block content %}
+<h1>{{ object.name }}</h1>
+<p>{{ object.description }}</p>
+<p>Quantity: {{ object.quantity }} {{ object.quantity_units }}</p>
+<p>Origin: {{ object.origin }}</p>
+<p>Date Received: {{ object.date_received }}</p>
+
+<h2>Photos</h2>
+<ul>
+    {% for photo in photos %}
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.caption }}"></li>
+    {% endfor %}
+</ul>
+{% endblock %}
