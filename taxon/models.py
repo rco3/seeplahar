@@ -71,7 +71,7 @@ class Characteristic(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     value = models.CharField(max_length=100)
-    variety = models.ForeignKey(Variety, related_name='characteristics', on_delete=models.CASCADE)
+    varieties = models.ManyToManyField('Variety', related_name='characteristics')
 
     def __str__(self):
         return f"{self.name}: {self.value}"

@@ -1,88 +1,121 @@
 import csv
+import logging
 from datetime import datetime
+from decimal import Decimal, InvalidOperation
 from django.core.management.base import BaseCommand
 from taxon.models import Taxon, Variety, Characteristic
 from farm.models import SeedLot
 
+# Set up logging
+logging.basicConfig(level=logging.DEBUG)
+logger = logging.getLogger(__name__)
+
 class Command(BaseCommand):
-    help = 'Import seed data into the Variety and SeedLot models'
+    help = 'Import seed data from CSV files'
 
     def handle(self, *args, **kwargs):
-        # Paths to your CSV files
-        csv_file_path1 = './taxon/management/sample_data/seed_varieties.csv'
-        csv_file_path2 = './taxon/management/sample_data/TomatoSeeds.csv'
+        self.import_seed_varieties()
+        self.import_tomato_seeds()
 
-        # Define a function to parse date
-        def parse_date(date_str):
-            try:
-                return datetime.strptime(date_str, '%m/%d/%Y').date() if date_str else None
-            except ValueError:
-                return None
-
-        # Function to get value or None
-        def get_value_or_none(row, key):
-            return row.get(key, None) if row.get(key, "").strip() else None
-
-        # Import data from the first CSV file
-        with open(csv_file_path1, newline='') as csvfile:
+    def import_seed_varieties(self):
+        with open('taxon/management/sample_data/seed_varieties.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                type_value = row['Type'].lower()  # Normalize type to lowercase
-                taxon, _ = Taxon.objects.get_or_create(
+                logger.debug(f"Processing row: {row}")
+                taxon_type = row['Type'].strip().lower()
+                taxon, created = Taxon.objects.get_or_create(
                     name=row['Common Name'],
-                    defaults={'species_name': row['Species'], 'type': type_value}
+                    species_name=row['Species'],
+                    defaults={'type': taxon_type}
                 )
+                logger.debug(f"Taxon: {taxon}, Created: {created}")
+
                 variety, created = Variety.objects.get_or_create(
                     name=row['Variety'],
-                    taxon=taxon,
-                    defaults={'description': '', 'origin': row['Vendor']}
+                    defaults={'taxon': taxon}
                 )
-                quantity = int(row['Amount'].split()[0]) if row['Amount'].split()[0].isdigit() else None
+                logger.debug(f"Variety: {variety}, Created: {created}")
+
+                quantity, units = self.parse_amount(row['Amount'])
                 SeedLot.objects.create(
                     variety=variety,
+                    origin=row['Vendor'],
                     quantity=quantity,
-                    date_received=parse_date(get_value_or_none(row, 'Date Acq'))
+                    units=units
                 )
-                if created:
-                    self.stdout.write(self.style.SUCCESS(f'Created variety: {variety.name}'))
+                logger.debug(f"SeedLot created for variety {variety}")
 
-        # Import data from the second CSV file
-        with open(csv_file_path2, newline='') as csvfile:
+    def import_tomato_seeds(self):
+        with open('taxon/management/sample_data/TomatoSeeds.csv', newline='') as csvfile:
             reader = csv.DictReader(csvfile)
             for row in reader:
-                taxon, _ = Taxon.objects.get_or_create(
+                logger.debug(f"Processing row: {row}")
+                taxon, created = Taxon.objects.get_or_create(
                     name='Tomato',
-                    defaults={'species_name': row['Species'], 'type': 'vegetable'}
+                    species_name='solanum lycopersicum',
+                    defaults={'type': 'vegetable'}
                 )
+                logger.debug(f"Taxon: {taxon}, Created: {created}")
+
                 variety, created = Variety.objects.get_or_create(
                     name=row['Name'],
-                    taxon=taxon,
-                    defaults={'description': row['Description'], 'origin': row['Source']}
+                    defaults={'taxon': taxon, 'description': row['Description']}
                 )
-                quantity = int(row['QOH']) if row['QOH'] and row['QOH'].isdigit() else None
-                SeedLot.objects.create(
-                    variety=variety,
-                    quantity=quantity,
-                    date_received=parse_date(get_value_or_none(row, 'Date Acq'))
-                )
-                characteristics = [
-                    ('Plant Size', get_value_or_none(row, 'Plant Size')),
-                    ('Color', get_value_or_none(row, 'Color')),
-                    ('Shape', get_value_or_none(row, 'Shape')),
-                    ('Weight, Oz', get_value_or_none(row, 'Oz')),
-                    ('Days', get_value_or_none(row, 'Days')),
-                    ('Family', get_value_or_none(row, 'Family')),
-                    ('Feature', get_value_or_none(row, 'Feature')),
-                    ('Antho', 'Yes' if row.get('Antho') else 'No'),
-                    ('Notes', get_value_or_none(row, 'Notes')),
-                    ('Breeder', get_value_or_none(row, 'Breeder')),
-                ]
-                for name, value in characteristics:
+                logger.debug(f"Variety: {variety}, Created: {created}")
+
+                characteristics = {
+                    'Plant Size': row['Plant Size'],
+                    'Color': row['Color'],
+                    'Shape': row['Shape'],
+                    'Weight (Oz)': row['Oz  '],
+                    'Days to Maturity': row['Days'],
+                    'Family': row['Family'],
+                    'Feature': row['Feature'],
+                    'Breeder': row['Breeder'],
+                }
+
+                if row['Antho']:
+                    characteristics['Color'] = 'Antho'
+
+                for key, value in characteristics.items():
                     if value:
-                        Characteristic.objects.create(
-                            variety=variety,
-                            name=name,
-                            value=value
+                        char, created = Characteristic.objects.get_or_create(
+                            name=key,
+                            defaults={'value': value}  # Assuming you have a description field
                         )
-                if created:
-                    self.stdout.write(self.style.SUCCESS(f'Created variety: {variety.name}'))
+                        logger.debug(f"Characteristic: {char}, Created: {created}")
+                        variety.characteristics.add(char, through_defaults={'value': value})
+                        logger.debug(f"Added Characteristic {char} to Variety {variety}")
+
+                if row['Source'] or row['Date Acq'] or row['QOH']:
+                    SeedLot.objects.create(
+                        variety=variety,
+                        origin=row['Source'],
+                        date_received=self.parse_date(row['Date Acq']),
+                        quantity=self.parse_quantity(row['QOH']),
+                        units='seeds'
+                    )
+                    logger.debug(f"SeedLot created for variety {variety}")
+
+    def parse_date(self, date_str):
+        try:
+            return datetime.strptime(date_str, '%m/%d/%Y').date()
+        except ValueError:
+            logger.error(f"Date parsing error for date: {date_str}")
+            return None
+
+    def parse_quantity(self, quantity_str):
+        try:
+            return Decimal(quantity_str)
+        except (ValueError, InvalidOperation):
+            logger.error(f"Quantity parsing error for quantity: {quantity_str}")
+            return Decimal('0')
+
+    def parse_amount(self, amount_str):
+        parts = amount_str.split()
+        if len(parts) == 2:
+            quantity, units = parts
+            return self.parse_quantity(quantity), units
+        logger.error(f"Amount parsing error for amount: {amount_str}")
+        return Decimal('0'), 'units'
+

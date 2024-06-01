@@ -9,7 +9,7 @@ class SeedLot(models.Model):
     name = models.CharField(max_length=100, default='New Seedlot')
     quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
     units = models.CharField(max_length=50, null=True, blank=True)
-    date_received = models.DateField(default=datetime.now)
+    date_received = models.DateField(null=True, blank=True, default=datetime.now)
     origin = models.CharField(max_length=100, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True)
