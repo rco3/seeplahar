@@ -74,17 +74,31 @@ class Command(BaseCommand):
                     'Breeder': row['Breeder'],
                 }
 
+                # Handle Antho separately to ensure multiple Colors
+                colors = [row['Color']]
                 if row['Antho']:
-                    characteristics['Color'] = 'Antho'
+                    colors.append('Antho')
 
-                for key, value in characteristics.items():
-                    if value:
+                # Add Color characteristics
+                for color in colors:
+                    if color:
                         char, created = Characteristic.objects.get_or_create(
-                            name=key,
-                            defaults={'value': value}  # Assuming you have a description field
+                            name='Color',
+                            value=color
                         )
                         logger.debug(f"Characteristic: {char}, Created: {created}")
-                        variety.characteristics.add(char, through_defaults={'value': value})
+                        variety.characteristics.add(char)
+                        logger.debug(f"Added Characteristic {char} to Variety {variety}")
+
+                # Add other characteristics
+                for key, value in characteristics.items():
+                    if key != 'Color' and value:  # Skip 'Color' as it's already handled
+                        char, created = Characteristic.objects.get_or_create(
+                            name=key,
+                            value=value
+                        )
+                        logger.debug(f"Characteristic: {char}, Created: {created}")
+                        variety.characteristics.add(char)
                         logger.debug(f"Added Characteristic {char} to Variety {variety}")
 
                 if row['Source'] or row['Date Acq'] or row['QOH']:
@@ -118,4 +132,3 @@ class Command(BaseCommand):
             return self.parse_quantity(quantity), units
         logger.error(f"Amount parsing error for amount: {amount_str}")
         return Decimal('0'), 'units'
-
