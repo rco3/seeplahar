@@ -1,6 +1,8 @@
 from django.views.generic import ListView, DetailView
 from .models import SeedPackage, ProducePackage, PlantPackage
 from media.models import Photo
+from django.contrib.contenttypes.models import ContentType
+
 
 class SeedPackageDetailView(DetailView):
     model = SeedPackage
@@ -8,7 +10,8 @@ class SeedPackageDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['photos'] = Photo.objects.filter(content_type__model='seedpackage', object_id=self.object.id)
+        seedpackage_content_type = ContentType.objects.get_for_model(SeedPackage)
+        context['photos'] = Photo.objects.filter(content_type=seedpackage_content_type, object_id=self.object.id)
         return context
 
 class ProducePackageDetailView(DetailView):
@@ -17,7 +20,8 @@ class ProducePackageDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['photos'] = Photo.objects.filter(content_type__model='producepackage', object_id=self.object.id)
+        producepackage_content_type = ContentType.objects.get_for_model(ProducePackage)
+        context['photos'] = Photo.objects.filter(content_type=producepackage_content_type, object_id=self.object.id)
         return context
 
 class PlantPackageDetailView(DetailView):
@@ -26,5 +30,6 @@ class PlantPackageDetailView(DetailView):
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
-        context['photos'] = Photo.objects.filter(content_type__model='plantpackage', object_id=self.object.id)
+        plantpackage_content_type = ContentType.objects.get_for_model(PlantPackage)
+        context['photos'] = Photo.objects.filter(content_type=plantpackage_content_type, object_id=self.object.id)
         return context

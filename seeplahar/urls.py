@@ -31,4 +31,5 @@ urlpatterns = [
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),
     path('<uuid:pk>/', GenericDetailView.as_view(), name='generic-detail'),
+    path('users/', include('users.urls', namespace='users')),
 ]

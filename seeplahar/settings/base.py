@@ -84,6 +84,11 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', default='', cast=Csv())
 # Application definition
 
 INSTALLED_APPS = [
+    'users',
+    'taxon',
+    'farm',
+    'shop',
+    'media',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -93,11 +98,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
-    'users',
-    'taxon',
-    'farm',
-    'shop',
-    'media',
+
 ]
 
 MIDDLEWARE = [
@@ -187,6 +188,6 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-AUTH_USER_MODEL = 'users.CustomUser'
+AUTH_USER_MODEL = 'users.SiteUser'
 
 TAILWIND_APP_NAME = 'theme'

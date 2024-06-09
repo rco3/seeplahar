@@ -1,18 +1,17 @@
 {% extends "base.html" %}
 
-{% block title %}Seed Lot Detail{% endblock %}
-
 {% block content %}
-<h1>{{ object.name }}</h1>
-<p>{{ object.description }}</p>
-<p>Quantity: {{ object.quantity }} {{ object.quantity_units }}</p>
-<p>Origin: {{ object.origin }}</p>
-<p>Date Received: {{ object.date_received }}</p>
-
+<h1>{{ seedlot.name }}</h1>
+<p>Variety: {{ seedlot.variety.name }}</p>
+<p>Quantity: {{ seedlot.quantity }} {{ seedlot.units }}</p>
+<p>Date Received: {{ seedlot.date_received }}</p>
+<p>Origin: {{ seedlot.origin }}</p>
+<p>Description: {{ seedlot.description }}</p>
+<p>Organization: {{ seedlot.organization.name }}</p>
 <h2>Photos</h2>
 <ul>
     {% for photo in photos %}
-    <li><img src="{{ photo.image.url }}" alt="{{ photo.caption }}"></li>
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.description }}">{{ photo.description }}</li>
     {% endfor %}
 </ul>
 {% endblock %}

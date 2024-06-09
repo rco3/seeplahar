@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Seedling Batch Detail{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold">Seedling Batch Detail</h1>
+<p>{{ seedlingbatch.seed_lot.name }} batch sown on {{ seedlingbatch.date }}</p>
+
+<h2>Photos</h2>
+<ul>
+    {% for photo in photos %}
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.description }}">{{ photo.description }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

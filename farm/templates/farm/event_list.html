@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Events</h1>
+<ul>
+    {% for event in events %}
+        <li><a href="{% url 'farm:event_detail' event.id %}">{{ event.type }} on {{ event.date }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

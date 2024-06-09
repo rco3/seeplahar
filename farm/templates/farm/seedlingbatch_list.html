@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Seedling Batches</h1>
+<ul>
+    {% for seedlingbatch in seedling_batches %}
+        <li><a href="{% url 'farm:seedlingbatch_detail' seedlingbatch.id %}">{{ seedlingbatch.seed_lot.name }} batch sown on {{ seedlingbatch.date }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
+
+

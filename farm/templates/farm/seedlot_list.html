@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Seed Lots</h1>
+<ul>
+    {% for seedlot in seedlots %}
+        <li><a href="{% url 'farm:seedlot_detail' seedlot.id %}">{{ seedlot.name }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Harvest on {{ harvest.date }}</h1>
+<p>Quantity: {{ harvest.quantity }} {{ harvest.units }}</p>
+<p>Description: {{ harvest.description }}</p>
+<p>Organization: {{ harvest.organization.name }}</p>
+<h2>Photos</h2>
+<ul>
+    {% for photo in photos %}
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.description }}">{{ photo.description }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}
+

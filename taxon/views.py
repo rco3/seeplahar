@@ -25,6 +25,13 @@ class TaxonListView(ListView):
         else:
             return Taxon.objects.filter(type=taxon_type)
 
+
+class TaxonDetailView(DetailView):
+    model = Taxon
+    template_name = 'taxon/taxon_detail.html'
+    context_object_name = 'taxon'
+
+
 class VarietyListView(ListView):
     model = Variety
     template_name = 'taxon/variety_list.html'
@@ -52,10 +59,6 @@ class VarietyDetailView(DetailView):
         return context
 
 
-class TaxonDetailView(DetailView):
-    model = Taxon
-    template_name = 'taxon/taxon_detail.html'
-    context_object_name = 'taxon'
 
 
 def TaxonTestListView(request):

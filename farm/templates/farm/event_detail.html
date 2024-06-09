@@ -1,0 +1,7 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Event: {{ event.type }} on {{ event.date }}</h1>
+<p>Description: {{ event.description }}</p>
+<p>Related Item: {{ event.related_item }}</p>
+{% endblock %}

@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>{{ plant.variety.name }} - {{ plant.location }}</h1>
+<p>Status: {{ plant.status }}</p>
+<p>Date: {{ plant.date }}</p>
+<p>Seed Lot: <a href="{% url 'farm:seedlot_detail' plant.seed_lot.id %}">{{ plant.seed_lot.name }}</a></p>
+<h2>Photos</h2>
+<ul>
+    {% for photo in photos %}
+    <li><img src="{{ photo.image.url }}" alt="{{ photo.description }}">{{ photo.description }}</li>
+    {% endfor %}
+</ul>
+{% endblock %}

@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Harvests</h1>
+<ul>
+    {% for harvest in harvests %}
+        <li><a href="{% url 'farm:harvest_detail' harvest.id %}">Harvest on {{ harvest.date }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}
