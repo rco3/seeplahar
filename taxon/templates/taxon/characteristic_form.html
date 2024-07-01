@@ -1,0 +1,13 @@
+<!-- taxon/characteristic_form.html -->
+{% for form in formset %}
+    <div class="form-row border p-2 mb-2">
+        <h3 class="text-lg font-medium">Characteristic {{ forloop.counter }}</h3>
+        <label for="{{ form.name.id_for_label }}">Name:</label>
+        <input type="text" name="{{ form.name.name }}" id="{{ form.name.id_for_label }}" hx-get="{% url 'characteristic-name-autocomplete' %}?term={form.name.value}" hx-trigger="input" hx-target="#{{ form.name.id_for_label }}-list" autocomplete="off">
+        <ul id="{{ form.name.id_for_label }}-list" class="autocomplete-suggestions"></ul>
+
+        <label for="{{ form.value.id_for_label }}">Value:</label>
+        <input type="text" name="{{ form.value.name }}" id="{{ form.value.id_for_label }}" hx-get="{% url 'characteristic-value-autocomplete' %}?term={form.value.value}" hx-trigger="input" hx-target="#{{ form.value.id_for_label }}-list" autocomplete="off">
+        <ul id="{{ form.value.id_for_label }}-list" class="autocomplete-suggestions"></ul>
+    </div>
+{% endfor %}

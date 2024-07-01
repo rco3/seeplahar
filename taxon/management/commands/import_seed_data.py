@@ -64,7 +64,7 @@ class Command(BaseCommand):
                 logger.debug(f"Variety: {variety}, Created: {created}")
 
                 characteristics = {
-                    'Plant Size': row['Plant Size'],
+                    'Planting Size': row['Planting Size'],
                     'Color': row['Color'],
                     'Shape': row['Shape'],
                     'Weight (Oz)': row['Oz  '],

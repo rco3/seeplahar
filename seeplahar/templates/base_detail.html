@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+
+{% block content %}
+  <h1>{{ object }}</h1>
+  
+  <dl>
+    {% for field in model_fields %}
+      <dt>{{ field.verbose_name|title }}</dt>
+      <dd>{{ object|getattribute:field.name }}</dd>
+    {% endfor %}
+  </dl>
+
+  <a href="{% url 'generic_update' app_label model_name object.pk %}">Edit</a>
+  <a href="{% url 'generic_delete' app_label model_name object.pk %}">Delete</a>
+  <a href="{% url 'generic_list' app_label model_name %}">Back to List</a>
+{% endblock %}

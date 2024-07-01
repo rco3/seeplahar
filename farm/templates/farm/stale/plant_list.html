@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h1>Plants</h1>
+<ul>
+    {% for planting in plants %}
+        <li><a href="{% url 'farm:plant_detail' planting.id %}">{{ planting.variety.name }} - {{ planting.location }}</a></li>
+    {% endfor %}
+</ul>
+{% endblock %}

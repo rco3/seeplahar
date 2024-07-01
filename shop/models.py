@@ -2,9 +2,10 @@ from django.db import models
 import uuid
 from farm.models import SeedLot, Harvest, SeedlingBatch
 from media.models import Photo
+from users.models import CustomerAwareModel
 
 
-class SeedPackage(models.Model):
+class SeedPackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
@@ -17,7 +18,7 @@ class SeedPackage(models.Model):
     def __str__(self):
         return f'Seed Package: {self.seed_lot.name} - {self.quantity} {self.quantity_units}'
 
-class ProducePackage(models.Model):
+class ProducePackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     harvest = models.ForeignKey(Harvest, on_delete=models.CASCADE)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
@@ -30,9 +31,9 @@ class ProducePackage(models.Model):
     def __str__(self):
         return f'Produce Package: {self.harvest} - {self.quantity} {self.quantity_units}'
 
-class PlantPackage(models.Model):
+class PlantPackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    plants = models.ManyToManyField('farm.Plant', related_name='packages')
+    plants = models.ManyToManyField('farm.Planting', related_name='packages')
     date_packaged = models.DateField()
     quantity = models.PositiveIntegerField()
     description = models.TextField(blank=True, null=True)
@@ -41,4 +42,4 @@ class PlantPackage(models.Model):
 
 
     def __str__(self):
-        return f'Plant Package created on {self.date_packaged}'
+        return f'Planting Package created on {self.date_packaged}'

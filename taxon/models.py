@@ -1,9 +1,11 @@
 from django.db import models
 import uuid
+from users.models import CustomerAwareModel
 from media.models import Photo
 
+# taxon/models.py
 
-class Taxon(models.Model):
+class Taxon(CustomerAwareModel):
     FRUIT = 'fruit'
     VEGETABLE = 'vegetable'
     HERB = 'herb'
@@ -44,7 +46,7 @@ class Taxon(models.Model):
         verbose_name_plural = "Taxa"
 
 
-class Synonym(models.Model):
+class Synonym(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     taxon = models.ForeignKey(Taxon, related_name='synonyms', on_delete=models.CASCADE)
@@ -53,7 +55,7 @@ class Synonym(models.Model):
         return self.name
 
 
-class Variety(models.Model):
+class Variety(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     taxon = models.ForeignKey(Taxon, related_name='varieties', on_delete=models.CASCADE)
@@ -67,7 +69,7 @@ class Variety(models.Model):
     class Meta:
         verbose_name_plural = "Varieties"
 
-class Characteristic(models.Model):
+class Characteristic(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=100)
     value = models.CharField(max_length=100)

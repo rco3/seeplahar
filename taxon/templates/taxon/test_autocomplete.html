@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Autocomplete Tiles - Fun Edition</title>
+    {% load static %}
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+    <style>
+    .tile-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-top: 10px;
+    }
+
+    .tile {
+        padding: 10px 15px;
+        background-color: #e0f7fa;
+        border: 1px solid #006064;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background-color 0.3s;
+    }
+
+    .tile:hover {
+        background-color: #b2ebf2;
+    }
+
+    .autocomplete-input {
+        position: relative;
+        width: 100%;
+        padding: 10px;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+    }
+
+    .autocomplete-input::placeholder {
+        color: #aaa;
+    }
+
+    .hidden {
+        display: none;
+    }
+    </style>
+</head>
+<body>
+    <h1>Autocomplete Tiles - Fun Edition</h1>
+    <div>
+        <input type="text" id="characteristic-name" class="autocomplete-input" name="term" placeholder="Type to filter tiles..." autocomplete="off" hx-get="{% url 'taxon:characteristic-name-autocomplete' %}" hx-trigger="keyup changed delay:500ms" hx-target="#tile-container" hx-params="*">
+    </div>
+    <div id="tile-container" class="tile-container">
+        <!-- Tiles will be inserted here by HTMX -->
+    </div>
+
+    <script>
+    document.body.addEventListener('click', function(event) {
+        if (event.target.matches('.tile')) {
+            const inputField = document.querySelector('#characteristic-name');
+            inputField.value = event.target.textContent.trim();
+            document.querySelector('#tile-container').innerHTML = '';
+        }
+    });
+
+    document.getElementById('characteristic-name').addEventListener('keydown', function(event) {
+        const tiles = document.querySelectorAll('.tile');
+        if (event.key === 'Enter' && tiles.length === 1) {
+            event.preventDefault();
+            this.value = tiles[0].innerText.trim();
+            document.getElementById('tile-container').innerHTML = '';
+        }
+    });
+    </script>
+</body>
+</html>

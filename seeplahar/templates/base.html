@@ -2,10 +2,17 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    {% load static %}
+    {% load custom_tags %}
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Seeplahar{% endblock %}</title>
+    <script src="{% static 'js/htmx.min.js' %}"></script>
+
+
     {% load static tailwind_tags %}
+    {% load permissions %}
     {% tailwind_css %}
+
     <style>
         html, body {
             margin: 0;
@@ -15,6 +22,7 @@
     </style>
 </head>
 <body class="bg-primary-lighter text-primary-dark flex flex-col min-h-screen">
+
     <div class="flex-grow">
         {% block content %}
         {% endblock %}

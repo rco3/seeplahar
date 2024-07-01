@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+
+{% block content %}
+  <h1>{{ action }} {{ model_name|title }}</h1>
+  
+  <form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Save</button>
+  </form>
+  
+  <a href="{% url app_label|add:':'|add:model_name|add:'_list' %}">Cancel</a>
+{% endblock %}

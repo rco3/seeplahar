@@ -1,0 +1,102 @@
+# seeplahar/base_views.py
+from django.urls import reverse, NoReverseMatch
+from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
+from django.contrib.auth.mixins import LoginRequiredMixin
+from users.middleware import get_current_customer
+
+
+class CustomerAwareView(LoginRequiredMixin):
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        if not self.request.user.is_superuser:
+            current_customer = get_current_customer()
+            if current_customer and hasattr(self.model, 'customer'):
+                return queryset.filter(customer=current_customer)
+        return queryset
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['view'] = self
+        return context
+
+
+class BaseListView(CustomerAwareView, ListView):
+    template_name = 'base_list.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        model_name = self.model.__name__.lower()
+        app_label = self.model._meta.app_label
+
+        # Add view to context
+        context['view'] = self
+
+        # Prepare object data
+        context['object_list'] = [
+            {
+                'pk': obj.pk,
+                'str': str(obj),
+                'fields': [
+                    (field.verbose_name, getattr(obj, field.name))
+                    for field in self.model._meta.fields
+                ]
+            }
+            for obj in self.get_queryset()
+        ]
+
+        # Prepare URLs
+        try:
+            context['create_url'] = reverse(f'{app_label}:{model_name}_create')
+            context['detail_url_name'] = f'{app_label}:{model_name}_detail'
+        except NoReverseMatch:
+            # If URLs are not defined, don't add them to context
+            pass
+
+        # Add model information
+        context['model_name'] = model_name
+        context['model_verbose_name'] = self.model._meta.verbose_name
+        context['model_verbose_name_plural'] = self.model._meta.verbose_name_plural
+
+        return context
+
+
+class BaseDetailView(CustomerAwareView, DetailView):
+    template_name = 'base_detail.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        obj = self.get_object()
+        model_name = self.model.__name__.lower()
+        app_label = self.model._meta.app_label
+
+        # Add view to context
+        context['view'] = self
+
+        # Prepare field values
+        context['field_values'] = [
+            (field.verbose_name, getattr(obj, field.name))
+            for field in self.model._meta.fields
+        ]
+
+        # Prepare URLs
+        try:
+            context['update_url'] = reverse(f'{app_label}:{model_name}_update', args=[obj.pk])
+            context['delete_url'] = reverse(f'{app_label}:{model_name}_delete', args=[obj.pk])
+            context['list_url'] = reverse(f'{app_label}:{model_name}_list')
+        except NoReverseMatch:
+            # If URLs are not defined, don't add them to context
+            pass
+
+        # Add model_name to context
+        context['model_name'] = model_name
+
+        return context
+
+class BaseCreateView(CustomerAwareView, CreateView):
+    template_name = 'base_form.html'
+
+class BaseUpdateView(CustomerAwareView, UpdateView):
+    template_name = 'base_form.html'
+
+class BaseDeleteView(CustomerAwareView, DeleteView):
+    template_name = 'base_confirm_delete.html'

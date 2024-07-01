@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+
+{% block title %}Intake{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold">Intake</h1>
+<p>Select the type of item you are adding to the system:</p>
+<div class="grid grid-cols-2 gap-4 mt-4">
+    <a href="{% url 'farm:seedlot_create' %}" class="bg-blue-500 text-white p-4 rounded text-center">Add New SeedLot</a>
+    <a href="{% url 'farm:planting_create' %}" class="bg-green-500 text-white p-4 rounded text-center">Add New planting</a>
+    <a href="{% url 'farm:seedlingbatch_create' %}" class="bg-yellow-500 text-white p-4 rounded text-center">Add New SeedlingBatch</a>
+    <a href="{% url 'farm:harvest_create' %}" class="bg-red-500 text-white p-4 rounded text-center">Add New Harvest</a>
+{#    <a href="{% url 'farm:cutting_create' %}" class="bg-purple-500 text-white p-4 rounded text-center">Add New Cutting</a>#}
+</div>
+{% endblock %}

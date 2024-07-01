@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard{% endblock %}
+{% load permissions %}
+{% block content %}
+<h1 class="text-3xl font-bold">Admin Dashboard</h1>
+<ul>
+    {% if user|has_perm:'taxon.add_variety' %}
+    <li><a href="{% url 'taxon:variety_create' %}">Add New Variety</a></li>
+    <li><a href="{% url 'taxon:taxon_create' %}">Add New Taxon</a></li>
+    <li><a href="{% url 'taxon:synonym_create' %}">Add New Synonym</a></li>
+    {% endif %}
+    {% if user|has_perm:'farm.add_seedlot' %}
+    <li><a href="{% url 'farm:seedlot_create' %}">Add New SeedLot</a></li>
+    <li><a href="{% url 'farm:seedlingbatch_create' %}">Add New SeedlingBatch</a></li>
+    <li><a href="{% url 'farm:plant_create' %}">Add New planting</a></li>
+    <li><a href="{% url 'farm:harvest_create' %}">Add New Harvest</a></li>
+    {% endif %}
+</ul>
+{% endblock %}

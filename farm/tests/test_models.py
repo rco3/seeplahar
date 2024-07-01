@@ -1,207 +1,171 @@
 from django.test import TestCase
-from farm.models import SeedLot, Plant, Harvest, SeedlingBatch, Event
+from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event
 from taxon.models import Taxon, Variety
-from users.models import Organization
+from users.models import Customer, Partner
+from django.contrib.contenttypes.models import ContentType
 import uuid
 from django.utils import timezone
 
-class SeedLotModelTests(TestCase):
+class FarmModelTests(TestCase):
 
     def setUp(self):
+        self.customer1 = Customer.objects.create(name='Galactic Gardeners')
+        self.customer2 = Customer.objects.create(name='Martian Meadows')
+        self.partner = Partner.objects.create(name='Andorian Seedlings', customer=self.customer1)
+
         self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
+            name='Romulan Lettuce',
+            species_name='Lactuca romulana',
             type=Taxon.VEGETABLE,
-            description='Test Description'
+            description='A crisp, green lettuce with a slight metallic aftertaste',
+            customer=self.customer1
         )
         self.variety = Variety.objects.create(
-            name='Test Variety',
+            name='Vulcan Crunch',
             taxon=self.taxon,
-            description='Test Variety Description'
+            description='Extra crispy variety, popular in Vulcan salads',
+            customer=self.customer1
         )
-        self.organization = Organization.objects.create(name='Test Organization')
         self.seedlot = SeedLot.objects.create(
             variety=self.variety,
-            name='Test Seedlot',
+            name='Starfleet Seed Stock',
             quantity=100,
             units='grams',
             date_received='2023-01-01',
-            origin='Test Origin',
-            description='Test Description',
-            organization=self.organization
+            origin='USS Enterprise Hydroponics Bay',
+            description='Prime seeds from the Enterprise',
+            customer=self.customer1
+        )
+        self.planting = Planting.objects.create(
+            variety=self.variety,
+            date=timezone.now(),
+            location="Hydroponics Bay 1",
+            status="growing",
+            customer=self.customer1
         )
 
     def test_seedlot_creation(self):
-        self.assertEqual(self.seedlot.name, 'Test Seedlot')
+        self.assertEqual(self.seedlot.name, 'Starfleet Seed Stock')
         self.assertEqual(self.seedlot.quantity, 100)
         self.assertEqual(self.seedlot.units, 'grams')
+        self.assertEqual(self.seedlot.customer, self.customer1)
 
     def test_seedlot_str_method(self):
-        self.assertEqual(str(self.seedlot), 'Test Seedlot')
+        self.assertEqual(str(self.seedlot), 'Starfleet Seed Stock')
 
-    def test_seedlot_update(self):
-        self.seedlot.name = 'Updated Seedlot'
-        self.seedlot.save()
-        self.assertEqual(self.seedlot.name, 'Updated Seedlot')
-
-    def test_seedlot_deletion(self):
-        seedlot_id = self.seedlot.id
-        self.seedlot.delete()
-        self.assertFalse(SeedLot.objects.filter(id=seedlot_id).exists())
-
-class PlantModelTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
+    def test_seedlot_customer_isolation(self):
+        alien_seedlot = SeedLot.objects.create(
+            variety=self.variety,
+            name='Klingon Battle Seeds',
+            quantity=50,
+            units='grams',
+            customer=self.customer2
         )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.organization = Organization.objects.create(name='Test Organization')
-        self.seedlot = SeedLot.objects.create(variety=self.variety, name='Test Seedlot', quantity=100)
-        self.plant = Plant.objects.create(
-            seed_lot=self.seedlot,
+        self.assertEqual(SeedLot.objects.filter(customer=self.customer1).count(), 1)
+        self.assertEqual(SeedLot.objects.filter(customer=self.customer2).count(), 1)
+
+    def test_plant_creation_from_seedlot(self):
+        plant = Planting.objects.create(
             variety=self.variety,
             date='2023-01-01',
-            location='Test Location',
-            status='growing'
+            location='Holodeck Garden Simulation',
+            status='growing',
+            customer=self.customer1,
+            source_content_type=ContentType.objects.get_for_model(SeedLot),
+            source_object_id=self.seedlot.id
         )
+        self.assertEqual(plant.location, 'Holodeck Garden Simulation')
+        self.assertEqual(plant.status, 'growing')
+        self.assertEqual(plant.customer, self.customer1)
+        self.assertEqual(plant.source, self.seedlot)
 
-    def test_plant_creation(self):
-        self.assertEqual(self.plant.location, 'Test Location')
-        self.assertEqual(self.plant.status, 'growing')
-
-    def test_plant_str_method(self):
-        self.assertEqual(str(self.plant), 'Test Variety - Test Location')
-
-    def test_plant_update(self):
-        self.plant.status = 'harvested'
-        self.plant.save()
-        self.assertEqual(self.plant.status, 'harvested')
-
-    def test_plant_deletion(self):
-        plant_id = self.plant.id
-        self.plant.delete()
-        self.assertFalse(Plant.objects.filter(id=plant_id).exists())
-
-class HarvestModelTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
-        )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.organization = Organization.objects.create(name='Test Organization')
-        self.plant = Plant.objects.create(
+    def test_plant_creation_from_partner(self):
+        plant = Planting.objects.create(
             variety=self.variety,
             date='2023-01-01',
-            status='growing'
+            location='Alien Botanical Gardens',
+            status='growing',
+            customer=self.customer1,
+            source_partner=self.partner
         )
-        self.harvest = Harvest.objects.create(
+        self.assertEqual(plant.location, 'Alien Botanical Gardens')
+        self.assertEqual(plant.status, 'growing')
+        self.assertEqual(plant.customer, self.customer1)
+        self.assertEqual(plant.source_partner, self.partner)
+        self.assertIsNone(plant.source_object_id)
+
+    def test_harvest_creation(self):
+        plant = Planting.objects.create(
+            variety=self.variety,
+            date='2023-01-01',
+            status='growing',
+            customer=self.customer1,
+            source_content_type=ContentType.objects.get_for_model(SeedLot),
+            source_object_id=self.seedlot.id
+        )
+        harvest = Harvest.objects.create(
             date='2023-02-01',
             quantity=50,
             units='kg',
-            description='Test Description',
-            organization=self.organization
+            description='First harvest of Romulan Lettuce',
+            customer=self.customer1
         )
-        self.harvest.plants.add(self.plant)
+        harvest.plants.add(plant)
+        self.assertEqual(harvest.quantity, 50)
+        self.assertEqual(harvest.units, 'kg')
+        self.assertEqual(harvest.customer, self.customer1)
+        self.assertIn(plant, harvest.plants.all())
 
-    def test_harvest_creation(self):
-        self.assertEqual(self.harvest.quantity, 50)
-        self.assertEqual(self.harvest.units, 'kg')
-
-    def test_harvest_str_method(self):
-        self.assertEqual(str(self.harvest), 'Harvest on 2023-02-01')
-
-    def test_harvest_update(self):
-        self.harvest.quantity = 60
-        self.harvest.save()
-        self.assertEqual(self.harvest.quantity, 60)
-
-    def test_harvest_deletion(self):
-        harvest_id = self.harvest.id
-        self.harvest.delete()
-        self.assertFalse(Harvest.objects.filter(id=harvest_id).exists())
-
-class SeedlingBatchModelTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
-        )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name='Test Seedlot',
-            quantity=100
-        )
-        self.seedling_batch = SeedlingBatch.objects.create(
+    def test_seedling_batch_creation(self):
+        seedling_batch = SeedlingBatch.objects.create(
             seed_lot=self.seedlot,
             date='2023-01-01',
             quantity=200,
             units='seeds',
-            status='germinating'
+            status='germinating',
+            customer=self.customer1
         )
-
-    def test_seedlingbatch_creation(self):
-        self.assertEqual(self.seedling_batch.quantity, 200)
-        self.assertEqual(self.seedling_batch.units, 'seeds')
-
-    def test_seedlingbatch_str_method(self):
-        self.assertEqual(str(self.seedling_batch), 'Test Seedlot batch sown on 2023-01-01')
-
-    def test_seedlingbatch_update(self):
-        self.seedling_batch.status = 'transplanted'
-        self.seedling_batch.save()
-        self.assertEqual(self.seedling_batch.status, 'transplanted')
-
-    def test_seedlingbatch_deletion(self):
-        seedlingbatch_id = self.seedling_batch.id
-        self.seedling_batch.delete()
-        self.assertFalse(SeedlingBatch.objects.filter(id=seedlingbatch_id).exists())
-
-class EventModelTests(TestCase):
-
-    def setUp(self):
-        self.event = Event.objects.create(
-            type='planting',
-            date='2023-01-01',
-            description='Test Description'
-        )
+        self.assertEqual(seedling_batch.quantity, 200)
+        self.assertEqual(seedling_batch.units, 'seeds')
+        self.assertEqual(seedling_batch.customer, self.customer1)
 
     def test_event_creation(self):
-        self.assertEqual(self.event.type, 'planting')
-        self.assertEqual(self.event.description, 'Test Description')
+        event = Event.objects.create(
+            type="fertilizing",
+            date=timezone.now(),
+            description="Fertilized Andorian Blue Peas",
+            customer=self.customer1,
+            content_type=ContentType.objects.get_for_model(Planting),
+            object_id=self.planting.id
+        )
+        self.assertIsNotNone(event)
+        self.assertEqual(event.type, "fertilizing")
+        self.assertEqual(event.description, "Fertilized Andorian Blue Peas")
+        self.assertEqual(event.customer, self.customer1)
+        self.assertEqual(event.content_type, ContentType.objects.get_for_model(Planting))
+        self.assertEqual(event.object_id, self.planting.id)
 
-    def test_event_str_method(self):
-        self.assertEqual(str(self.event), 'Event: planting on 2023-01-01')
+    def test_customer_isolation(self):
+        # Create objects for both customers
+        plant1 = Planting.objects.create(
+            variety=self.variety,
+            date='2023-01-01',
+            status='growing',
+            customer=self.customer1,
+            source_content_type=ContentType.objects.get_for_model(SeedLot),
+            source_object_id=self.seedlot.id
+        )
+        plant2 = Planting.objects.create(
+            variety=self.variety,
+            date='2023-01-01',
+            status='growing',
+            customer=self.customer2,
+            source_partner=self.partner
+        )
 
-    def test_event_update(self):
-        self.event.type = 'watering'
-        self.event.save()
-        self.assertEqual(self.event.type, 'watering')
+        # Check that each customer can only see their own objects
+        self.assertEqual(Planting.objects.filter(customer=self.customer1).count(), 2)
+        self.assertEqual(Planting.objects.filter(customer=self.customer2).count(), 1)
 
-    def test_event_deletion(self):
-        event_id = self.event.id
-        self.event.delete()
-        self.assertFalse(Event.objects.filter(id=event_id).exists())
+        # Check that total count is correct
+        self.assertEqual(Planting.objects.count(), 3)

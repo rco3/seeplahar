@@ -1,3 +1,5 @@
+{% load permissions %}
+
 <style>
     /* Ensure dropdown menus stay visible */
     .group:hover .group-hover\:flex {
@@ -61,6 +63,22 @@
                         <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Produce</a></li>
                     </ul>
                 </li>
+                {% if user.is_authenticated and user|has_perm:"farm.add_seedlot" %}
+                <li class="group relative">
+                    <a href="#" class="hover:underline p-2 block">Admin</a>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="{% url 'dashboard' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Dashboard</a></li>
+                        <li><a href="{% url 'taxon:variety_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Variety</a></li>
+                        <li><a href="{% url 'taxon:taxon_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Taxon</a></li>
+                        <li><a href="{% url 'taxon:synonym_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Synonym</a></li>
+                        <li><a href="{% url 'farm:seedlot_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New SeedLot</a></li>
+                        <li><a href="{% url 'farm:seedlingbatch_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New SeedlingBatch</a></li>
+                        <li><a href="{% url 'farm:planting_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New planting</a></li>
+                        <li><a href="{% url 'farm:harvest_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Harvest</a></li>
+                        <li><a href="{% url 'farm:intake' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Intake</a></li> <!-- Added link to intake -->
+                    </ul>
+                </li>
+                {% endif %}
             </ul>
             <ul class="flex space-x-4">
                 <!-- Login/Logout link -->

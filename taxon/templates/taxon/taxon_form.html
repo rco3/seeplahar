@@ -1,9 +1,12 @@
-{% extends "../../../seeplahar/templates/base.html" %}
+{% extends "base.html" %}
+
+{% block title %}Add Taxon{% endblock %}
+
 {% block content %}
-<h1>{% if form.instance.pk %}Edit{% else %}Create{% endif %} Taxon</h1>
+<h1 class="text-3xl font-bold">Add New Taxon</h1>
 <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
-    <button type="submit">Save</button>
+    <button type="submit" class="bg-green-500 text-white px-4 py-2">Save</button>
 </form>
 {% endblock %}

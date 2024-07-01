@@ -3,7 +3,10 @@ from django.db import models
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
 
-class Photo(models.Model):
+from users.models import CustomerAwareModel
+
+
+class Photo(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     image = models.ImageField(upload_to='photos/')
     description = models.TextField(null=True, blank=True)

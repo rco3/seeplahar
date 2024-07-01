@@ -1,0 +1,6 @@
+<!-- taxon/autocomplete_suggestions.html -->
+{% for suggestion in suggestions %}
+    <div class="tile" data-field="name" hx-get="#" hx-trigger="click" hx-swap="outerHTML">
+        {{ suggestion.name }}: {{ suggestion.value }}
+    </div>
+{% endfor %}

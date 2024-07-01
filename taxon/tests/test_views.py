@@ -3,19 +3,25 @@ from django.urls import reverse
 from taxon.models import Taxon, Variety
 import uuid
 
+from users.models import Customer
+
+
 class TaxonViewTests(TestCase):
 
     def setUp(self):
+        self.customer = Customer.objects.create(name='Test Customer')
         self.taxon = Taxon.objects.create(
             name='Test Taxon',
             species_name='Test Species',
             type=Taxon.VEGETABLE,
-            description='Test Description'
+            description='Test Description',
+            customer=self.customer
         )
         self.variety = Variety.objects.create(
             name='Test Variety',
             taxon=self.taxon,
-            description='Test Variety Description'
+            description='Test Variety Description',
+            customer=self.customer
         )
 
     def test_taxon_list_view(self):

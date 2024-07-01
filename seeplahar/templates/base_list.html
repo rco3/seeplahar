@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% load custom_tags %}
+
+{% block content %}
+<h1>{{ model_name_plural|title }} List</h1>
+
+<table>
+    <thead>
+        <tr>
+            {% for field in model_fields %}
+                <th>{{ field.verbose_name|title }}</th>
+            {% endfor %}
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for object in object_list %}
+            <tr>
+                {% for field in model_fields %}
+                    <td>{{ object|getattribute:field.name }}</td>
+                {% endfor %}
+                <td>
+                    <a href="{% url 'generic_detail' app_label model_name object.pk %}">View</a>
+                    <a href="{% url 'generic_update' app_label model_name object.pk %}">Edit</a>
+                    <a href="{% url 'generic_delete' app_label model_name object.pk %}">Delete</a>
+                </td>
+            </tr>
+        {% empty %}
+            <tr><td colspan="{{ model_fields|length|add:1 }}">No {{ model_name_plural }} found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<a href="{% url 'generic_create' app_label model_name %}">Create New {{ model_name|title }}</a>
+{% endblock %}

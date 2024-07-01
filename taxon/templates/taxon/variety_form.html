@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+
+{% block title %}Add Variety{% endblock %}
+
+{% block content %}
+<h1 class="text-3xl font-bold">Add New Variety</h1>
+
+<form method="post">
+    {% csrf_token %}
+    {{ form.as_p }}
+
+    <div>
+        <label for="characteristic-name" class="block text-sm font-medium text-gray-700">Characteristic Name</label>
+        <input type="text" id="characteristic-name" class="autocomplete-input" name="term" placeholder="Type to filter tiles..." autocomplete="off" hx-get="{% url 'taxon:characteristicNameAutoComplete' %}" hx-trigger="keyup changed delay:500ms" hx-target="#characteristic-container" hx-params="*">
+    </div>
+
+    <div id="characteristic-container" class="tile-container">
+        <!-- Tiles will be inserted here by HTMX -->
+    </div>
+
+    <div>
+        <label for="characteristic-value" class="block text-sm font-medium text-gray-700">Characteristic Value</label>
+        <input type="text" id="characteristic-value" class="autocomplete-input" name="term" placeholder="Type to filter tiles..." autocomplete="off" hx-get="{% url 'taxon:characteristicValueAutoComplete' %}" hx-trigger="keyup changed delay:500ms" hx-target="#characteristic-container">
+    </div>
+
+    <button type="submit" class="bg-green-500 text-white px-4 py-2">Save</button>
+</form>
+
+<script>
+document.body.addEventListener('click', function(event) {
+    if (event.target.matches('.tile')) {
+        const nameInputField = document.querySelector('#characteristic-name');
+        const valueInputField = document.querySelector('#characteristic-value');
+        const [name, value] = event.target.textContent.trim().split(': ');
+        nameInputField.value = name;
+        valueInputField.value = value;
+        document.querySelector('#characteristic-container').innerHTML = '';
+    }
+});
+
+document.querySelectorAll('.autocomplete-input').forEach(input => {
+    input.addEventListener('keydown', function(event) {
+        const tiles = document.querySelectorAll('.tile');
+        if (event.key === 'Enter' && tiles.length === 1) {
+            event.preventDefault();
+            const [name, value] = tiles[0].innerText.trim().split(': ');
+            if (this.id === 'characteristic-name') {
+                document.getElementById('characteristic-name').value = name;
+                document.getElementById('characteristic-value').value = value;
+            } else {
+                this.value = value;
+            }
+            document.getElementById('characteristic-container').innerHTML = '';
+        }
+    });
+
+    input.addEventListener('keyup', function(event) {
+        console.log(`Search term for ${this.id}: ${this.value}`);
+    });
+});
+</script>
+
+<style>
+.tile-container {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.tile {
+    padding: 10px 15px;
+    background-color: #e0f7fa;
+    border: 1px solid #006064;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: background-color 0.3s;
+}
+
+.tile:hover {
+    background-color: #b2ebf2;
+}
+
+.autocomplete-input {
+    width: 100%; /* Adjust width as needed */
+    max-width: 500px; /* Set a max width */
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+}
+
+.autocomplete-input::placeholder {
+    color: #aaa;
+}
+
+.hidden {
+    display: none;
+}
+</style>
+
+{% endblock %}

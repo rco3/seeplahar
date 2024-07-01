@@ -6,10 +6,12 @@ from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth import login as auth_login
 from taxon.models import Variety
-from farm.models import Event, Plant, SeedLot, SeedlingBatch, Harvest
+from farm.models import Event, Planting, SeedLot, SeedlingBatch, Harvest
 from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.contrib.auth.forms import AuthenticationForm
+from django.contrib.auth.mixins import PermissionRequiredMixin
+
 
 class CustomLoginView(View):
     def get(self, request, *args, **kwargs):
@@ -22,9 +24,20 @@ class CustomLoginView(View):
             auth_login(request, form.get_user())
             return redirect('/')
         return render(request, 'registration/login.html', {'form': form})
+
 def custom_logout(request):
     logout(request)
     return redirect('/')
+
+class DashboardView(PermissionRequiredMixin, TemplateView):
+    template_name = 'dashboard.html'
+    permission_required = ('farm.add_seedlot', 'taxon.add_variety')
+    raise_exception = True  # Raise a 403 Forbidden if permission is denied
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['has_perm'] = self.request.user.has_perm
+        return context
 
 class HomePageView(TemplateView):
     template_name = 'home.html'
@@ -54,50 +67,3 @@ class HomePageView(TemplateView):
             },
         ]
         return context
-
-
-class GenericDetailView(View):
-
-    def get(self, request, *args, **kwargs):
-        uuid = kwargs.get('pk')
-
-        # Try to get a Variety
-        try:
-            variety = Variety.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('taxon:variety-detail', kwargs={'pk': uuid}))
-        except Variety.DoesNotExist:
-            pass
-
-        # Try to get other farm objects and redirect accordingly
-        try:
-            event = Event.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('farm:event-add', kwargs={'pk': uuid}))
-        except Event.DoesNotExist:
-            pass
-
-        try:
-            plant = Plant.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('farm:plant-detail', kwargs={'pk': uuid}))
-        except Plant.DoesNotExist:
-            pass
-
-        try:
-            seed_lot = SeedLot.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('farm:seedlot-detail', kwargs={'pk': uuid}))
-        except SeedLot.DoesNotExist:
-            pass
-
-        try:
-            seedling_batch = SeedlingBatch.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('farm:seedlingbatch-detail', kwargs={'pk': uuid}))
-        except SeedlingBatch.DoesNotExist:
-            pass
-
-        try:
-            harvest = Harvest.objects.get(pk=uuid)
-            return HttpResponseRedirect(reverse('farm:harvest-detail', kwargs={'pk': uuid}))
-        except Harvest.DoesNotExist:
-            pass
-
-        raise Http404("Object does not exist")
-

@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'farm',
     'shop',
     'media',
+    'seeplahar',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -98,7 +99,7 @@ INSTALLED_APPS = [
     'tailwind',
     'theme',
     'django_browser_reload',
-
+    'autocomplete',
 ]
 
 MIDDLEWARE = [
@@ -110,6 +111,7 @@ MIDDLEWARE = [
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     "django_browser_reload.middleware.BrowserReloadMiddleware",
+    'users.middleware.CustomerMiddleware',
 ]
 
 ROOT_URLCONF = 'seeplahar.urls'
@@ -188,6 +190,6 @@ USE_TZ = True
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 
-AUTH_USER_MODEL = 'users.SiteUser'
+AUTH_USER_MODEL = 'users.User'
 
 TAILWIND_APP_NAME = 'theme'

@@ -1,23 +1,28 @@
-from django.shortcuts import render
-from django.views.generic import ListView, DetailView
-from .models import SiteUser, Organization
-
-class SiteUserListView(ListView):
-    model = SiteUser
-    template_name = 'users/siteuser_list.html'
-    context_object_name = 'siteusers'
-
-class SiteUserDetailView(DetailView):
-    model = SiteUser
-    template_name = 'users/siteuser_detail.html'
-    context_object_name = 'siteuser'
-
-class OrganizationListView(ListView):
-    model = Organization
-    template_name = 'users/organization_list.html'
-    context_object_name = 'organizations'
-
-class OrganizationDetailView(DetailView):
-    model = Organization
-    template_name = 'users/organization_detail.html'
-    context_object_name = 'organization'
+pass
+# # users/views.py
+#
+# from seeplahar.views import BaseListView, BaseDetailView, BaseCreateView, BaseUpdateView, BaseDeleteView
+# from .models import User, Partner
+#
+#
+# class UserListView(BaseListView):
+#     model = User
+#     context_object_name = 'users'
+#
+#
+# class UserDetailView(BaseDetailView):
+#     model = User
+#     context_object_name = 'user'
+#
+#
+# class PartnerListView(BaseListView):
+#     model = Partner
+#     context_object_name = 'partners'
+#
+#
+# class PartnerDetailView(BaseDetailView):
+#     model = Partner
+#     context_object_name = 'partner'
+#
+#
+# # Add CreateView, UpdateView, and DeleteView for both User and Partner if needed

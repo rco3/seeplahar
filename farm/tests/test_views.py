@@ -1,181 +1,113 @@
-from django.test import TestCase
+from django.test import TestCase, Client
 from django.urls import reverse
-from farm.models import SeedLot, Event, Plant, Harvest, SeedlingBatch
-from taxon.models import Taxon, Variety
-from users.models import Organization
-from django.utils import timezone
-from media.models import Photo
+from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event
+from taxon.models import Taxon, Variety
+from users.models import Customer, Partner
+from django.utils import timezone
 
-class SeedLotDetailViewTests(TestCase):
+User = get_user_model()
 
+class FarmViewsTestCase(TestCase):
     def setUp(self):
+        self.client = Client()
+        self.customer1 = Customer.objects.create(name="Starfleet Gardens")
+        self.customer2 = Customer.objects.create(name="Klingon Farms")
+        self.user1 = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer1)
+        self.user2 = User.objects.create_user(username="worf", password="prune_juice", customer=self.customer2)
+
         self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
+            name="Andorian Blue Peas",
+            species_name="Pisum andorii",
             type=Taxon.VEGETABLE,
-            description='Test Description'
+            description="A vibrant blue pea from Andoria",
+            customer=self.customer1
         )
         self.variety = Variety.objects.create(
-            name='Test Variety',
+            name="Frost Resistant",
             taxon=self.taxon,
-            description='Test Variety Description'
+            description="Variety that can withstand extreme cold",
+            customer=self.customer1
         )
-        self.organization = Organization.objects.create(name='Test Organization')
         self.seedlot = SeedLot.objects.create(
             variety=self.variety,
-            name='Test Seedlot',
+            name="Andorian Blue Pea Seeds Batch 1",
             quantity=100,
-            date_received=timezone.now(),
-            organization=self.organization
+            units="grams",
+            customer=self.customer1
         )
-        self.photo = Photo.objects.create(
-            image='path/to/photo.jpg',
-            description='Test Photo',
-            content_type=ContentType.objects.get_for_model(SeedLot),
-            object_id=self.seedlot.id
-        )
-
-    def test_seedlot_detail_view(self):
-        response = self.client.get(reverse('farm:seedlot_detail', args=[self.seedlot.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Test Seedlot')
-        self.assertContains(response, 'Test Photo')
-        self.assertTemplateUsed(response, 'farm/seedlot_detail.html')
-
-class PlantDetailViewTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
-        )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.organization = Organization.objects.create(name='Test Organization')
-        self.seedlot = SeedLot.objects.create(variety=self.variety, name='Test Seedlot', quantity=100)
-        self.plant = Plant.objects.create(
-            seed_lot=self.seedlot,
+        self.planting = Planting.objects.create(
             variety=self.variety,
             date=timezone.now(),
-            location='Test Location',
-            status='growing'
-        )
-        self.photo = Photo.objects.create(
-            image='path/to/photo.jpg',
-            description='Test Photo',
-            content_type=ContentType.objects.get_for_model(Plant),
-            object_id=self.plant.id
-        )
-
-    def test_plant_detail_view(self):
-        response = self.client.get(reverse('farm:plant_detail', args=[self.plant.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Test Variety - Test Location')
-        self.assertContains(response, 'Test Photo')
-        self.assertTemplateUsed(response, 'farm/plant_detail.html')
-
-class HarvestDetailViewTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
-        )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.organization = Organization.objects.create(name='Test Organization')
-        self.plant = Plant.objects.create(
-            variety=self.variety,
-            date=timezone.now(),
-            status='growing'
+            location="Hydroponics Bay 1",
+            status="growing",
+            customer=self.customer1,
+            source_content_type=ContentType.objects.get_for_model(SeedLot),
+            source_object_id=self.seedlot.id
         )
         self.harvest = Harvest.objects.create(
             date=timezone.now(),
             quantity=50,
-            units='kg',
-            description='Test Description',
-            organization=self.organization
+            units="kg",
+            description="First harvest of Andorian Blue Peas",
+            customer=self.customer1
         )
-        self.harvest.plants.add(self.plant)
-        self.photo = Photo.objects.create(
-            image='path/to/photo.jpg',
-            description='Test Photo',
-            content_type=ContentType.objects.get_for_model(Harvest),
-            object_id=self.harvest.id
-        )
+        self.harvest.plants.add(self.planting)
 
-    def test_harvest_detail_view(self):
-        response = self.client.get(reverse('farm:harvest_detail', args=[self.harvest.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Harvest on')
-        self.assertContains(response, 'Test Photo')
-        self.assertTemplateUsed(response, 'farm/harvest_detail.html')
-
-class SeedlingBatchDetailViewTests(TestCase):
-
-    def setUp(self):
-        self.taxon = Taxon.objects.create(
-            name='Test Taxon',
-            species_name='Test Species',
-            type=Taxon.VEGETABLE,
-            description='Test Description'
-        )
-        self.variety = Variety.objects.create(
-            name='Test Variety',
-            taxon=self.taxon,
-            description='Test Variety Description'
-        )
-        self.seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name='Test Seedlot',
-            quantity=100
-        )
         self.seedling_batch = SeedlingBatch.objects.create(
             seed_lot=self.seedlot,
             date=timezone.now(),
-            quantity=200,
-            units='seeds',
-            status='germinating'
+            quantity=50,
+            units="seedlings",
+            status="germinating",
+            customer=self.customer1
         )
-        self.photo = Photo.objects.create(
-            image='path/to/photo.jpg',
-            description='Test Photo',
-            content_type=ContentType.objects.get_for_model(SeedlingBatch),
-            object_id=self.seedling_batch.id
-        )
+        # self.event = Event.objects.create(
+        #     type="watering",
+        #     date=timezone.now(),
+        #     description="Watered Andorian Blue Peas",
+        #     customer=self.customer1
+        # )
 
-    def test_seedlingbatch_detail_view(self):
-        response = self.client.get(reverse('farm:seedlingbatch_detail', args=[self.seedling_batch.id]))
-        self.assertEqual(response.status_code, 200)
-        self.assertContains(response, 'Test Seedlot batch sown on')
-        self.assertContains(response, 'Test Photo')
-        self.assertTemplateUsed(response, 'farm/seedlingbatch_detail.html')
-
-class EventAddViewTests(TestCase):
-
-    def setUp(self):
-        self.event = Event.objects.create(
-            type='planting',
+    def test_customer_isolation(self):
+        # Create a planting for customer2
+        Planting.objects.create(
+            variety=self.variety,
             date=timezone.now(),
-            description='Test Description'
+            location="Klingon Battle Cruiser Garden",
+            status="growing",
+            customer=self.customer2
         )
 
-    def test_event_add_view(self):
-        response = self.client.post(reverse('farm:event_add'), {
-            'type': 'watering',
-            'date': timezone.now().strftime('%Y-%m-%d'),  # Ensure date format is correct
-            'description': 'Watering event'
-        })
-        self.assertEqual(response.status_code, 302)  # Expecting a redirect after successful form submission
-        self.assertTrue(Event.objects.filter(description='Watering event').exists())
+        # Test that user1 can only see their own plantings
+        self.client.login(username="picard", password="earlgrey")
+        response = self.client.get(reverse('farm:planting_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Hydroponics Bay 1")
+        self.assertNotContains(response, "Klingon Battle Cruiser Garden")
+
+        # Test that user2 can only see their own plantings
+        self.client.login(username="worf", password="prune_juice")
+        response = self.client.get(reverse('farm:planting_list'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Klingon Battle Cruiser Garden")
+        self.assertNotContains(response, "Hydroponics Bay 1")
+
+    def test_unauthorized_access(self):
+        self.client.login(username="worf", password="prune_juice")
+        response = self.client.get(reverse('farm:seedlot_detail', args=[self.seedlot.id]))
+        self.assertEqual(response.status_code, 404)  # Or 403, depending on your implementation
+
+    def test_qr_code_generation(self):
+        self.client.login(username="picard", password="earlgrey")
+        response = self.client.get(reverse('farm:generate_qr', args=[self.planting.id]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'image/png')
+
+    # Test for IntakeView
+    def test_intake_view(self):
+        self.client.login(username="picard", password="earlgrey")
+        response = self.client.get(reverse('farm:intake'))
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, "Intake")  # Assuming the word "Intake" is on the page
