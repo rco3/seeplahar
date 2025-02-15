@@ -11,12 +11,12 @@ User = get_user_model()
 
 class MultiTenancyTest(TestCase):
     def setUp(self):
-        print("\n--- Setup ---")
+        # print("\n--- Setup ---")
         self.customer1 = Customer.objects.create(name="Customer 1")
         self.customer2 = Customer.objects.create(name="Customer 2")
 
         self.initial_contact_type_count = ContactInfoType.objects.count()
-        print(f"Initial ContactInfoType count: {self.initial_contact_type_count}")
+        # print(f"Initial ContactInfoType count: {self.initial_contact_type_count}")
 
         self.user1 = create_user_with_email('user1', 'user1@example.com', 'password', self.customer1)
         self.user2 = create_user_with_email('user2', 'user2@example.com', 'password', self.customer2)
@@ -33,27 +33,27 @@ class MultiTenancyTest(TestCase):
         self.taxon2 = Taxon.objects.create(name="watermelon", species_name='citrullus lanatus', type='Fruit',
                                            description="watermelon description", customer=self.customer2)
 
-        print(f"Final ContactInfoType count: {ContactInfoType.objects.count()}")
-        print("--- End Setup ---")
+        # print(f"Final ContactInfoType count: {ContactInfoType.objects.count()}")
+        # print("--- End Setup ---")
 
     def test_contact_info_type_creation(self):
-        print("\n--- test_contact_info_type_creation ---")
+        # print("\n--- test_contact_info_type_creation ---")
         new_contact_type_count = ContactInfoType.objects.count() - self.initial_contact_type_count
-        print(f"New ContactInfoType count: {new_contact_type_count}")
+        # print(f"New ContactInfoType count: {new_contact_type_count}")
 
-        for contact_type in ContactInfoType.objects.all():
-            print(f"ContactInfoType: {contact_type.name}, Customer: {contact_type.customer.name}")
+        # for contact_type in ContactInfoType.objects.all():
+            # print(f"ContactInfoType: {contact_type.name}, Customer: {contact_type.customer.name}")
 
         self.assertEqual(new_contact_type_count, 4, "Expected 2 new ContactInfoTypes (one for each user)")
 
         # Verify that the new ContactInfoTypes are associated with the correct customers
         user1_contact_types = ContactInfoType.objects.filter(customer=self.customer1)
         user2_contact_types = ContactInfoType.objects.filter(customer=self.customer2)
-        print(f"Customer 1 ContactInfoTypes: {user1_contact_types.count()}")
-        print(f"Customer 2 ContactInfoTypes: {user2_contact_types.count()}")
+        # print(f"Customer 1 ContactInfoTypes: {user1_contact_types.count()}")
+        # print(f"Customer 2 ContactInfoTypes: {user2_contact_types.count()}")
         self.assertEqual(user1_contact_types.count(), 2, "Expected 1 ContactInfoType for Customer 1")
         self.assertEqual(user2_contact_types.count(), 2, "Expected 1 ContactInfoType for Customer 2")
-        print("--- End test_contact_info_type_creation ---")
+        # print("--- End test_contact_info_type_creation ---")
 
     def test_data_isolation(self):
         # Test Partner model

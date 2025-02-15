@@ -5,9 +5,12 @@ import uuid
 from django.core.exceptions import ValidationError
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
-from users.middleware import get_current_customer
+from django.db.models import QuerySet
+
+from .customer_context import get_current_customer
 
 # /users/models.py
+
 
 class UserManager(BaseUserManager):
     def create_user(self, username, password=None, customer=None, **extra_fields):
@@ -47,17 +50,35 @@ class Customer(models.Model):
         return self.name
 
 
+class CustomerAwareQuerySet(QuerySet):
+    def filter_by_current_customer(self):
+        customer = get_current_customer()
+        return self.filter(customer=customer) if customer else self.none()
+
+
+class CustomerAwareManager(models.Manager):
+    def get_queryset(self):
+        return CustomerAwareQuerySet(self.model, using=self._db)
+
+    def filter_by_current_customer(self):
+        return self.get_queryset().filter_by_current_customer()
+
+
 class CustomerAwareModel(models.Model):
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE)
+
+    objects = CustomerAwareManager()
+    all_objects = models.Manager()
 
     class Meta:
         abstract = True
 
     def save(self, *args, **kwargs):
         if not self.customer_id:
-            self.customer = get_current_customer()
+            current_customer = get_current_customer()
+            print(f"Saving {self.__class__.__name__}. Current customer: {current_customer}")
+            self.customer = current_customer
         super().save(*args, **kwargs)
-
 
 # In users/models.py
 class Partner(CustomerAwareModel):

@@ -10,3 +10,4 @@ python-decouple
 djangorestframework
 djangorestframework-jwt
 django-htmx-autocomplete
+pillow

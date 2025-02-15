@@ -9,11 +9,14 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class PlantingViewsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
         self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
+        self.client.login(username="picard", password="earlgrey")
+
         self.taxon = Taxon.objects.create(
             name="Andorian Blue Peas",
             species_name="Pisum andorii",
@@ -39,25 +42,22 @@ class PlantingViewsTestCase(TestCase):
             date=timezone.now(),
             location="Hydroponics Bay 1",
             status="growing",
-            customer=self.customer,
             source_content_type=ContentType.objects.get_for_model(SeedLot),
-            source_object_id=self.seedlot.id
+            source_object_id=self.seedlot.id,
+            customer=self.customer
         )
 
     def test_planting_list_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:planting_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Hydroponics Bay 1")
 
     def test_planting_detail_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:planting_detail', args=[self.planting.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Hydroponics Bay 1")
 
     def test_planting_create_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
@@ -68,10 +68,11 @@ class PlantingViewsTestCase(TestCase):
         }
         response = self.client.post(reverse('farm:planting_create'), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
-        self.assertTrue(Planting.objects.filter(location='Hydroponics Bay 2').exists())
+        created_planting = Planting.objects.filter(location='Hydroponics Bay 2').first()
+        self.assertIsNotNone(created_planting)
+        self.assertEqual(created_planting.customer, self.customer)
 
     def test_planting_update_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
@@ -84,7 +85,6 @@ class PlantingViewsTestCase(TestCase):
         self.assertEqual(self.planting.location, 'Updated Location')
 
     def test_planting_delete_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.post(reverse('farm:planting_delete', args=[self.planting.id]))
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.assertFalse(Planting.objects.filter(id=self.planting.id).exists())

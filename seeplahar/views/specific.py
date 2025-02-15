@@ -47,22 +47,22 @@ class HomePageView(TemplateView):
         context['types'] = [
             {
                 'name': 'Fruits',
-                'url': reverse_lazy('taxon:taxon-list', kwargs={'type': 'fruit'}),
+                'url': reverse_lazy('taxon:taxon_type_list', kwargs={'type': 'fruit'}),
                 'image': '/static/images/fruit.jpg'
             },
             {
                 'name': 'Vegetables',
-                'url': reverse_lazy('taxon:taxon-list', kwargs={'type': 'vegetable'}),
+                'url': reverse_lazy('taxon:taxon_type_list', kwargs={'type': 'vegetable'}),
                 'image': '/static/images/vegetable.jpg'
             },
             {
                 'name': 'Herbs',
-                'url': reverse_lazy('taxon:taxon-list', kwargs={'type': 'herb'}),
+                'url': reverse_lazy('taxon:taxon_type_list', kwargs={'type': 'herb'}),
                 'image': '/static/images/herb.jpg'
             },
             {
                 'name': 'Flowers',
-                'url': reverse_lazy('taxon:taxon-list', kwargs={'type': 'flower'}),
+                'url': reverse_lazy('taxon:taxon_type_list', kwargs={'type': 'flower'}),
                 'image': '/static/images/flower.jpg'
             },
         ]

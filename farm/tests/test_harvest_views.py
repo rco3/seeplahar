@@ -8,11 +8,14 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class HarvestViewsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
         self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
+        self.client.login(username="picard", password="earlgrey")
+
         self.taxon = Taxon.objects.create(
             name="Andorian Blue Peas",
             species_name="Pisum andorii",
@@ -50,19 +53,16 @@ class HarvestViewsTestCase(TestCase):
         self.harvest.plants.add(self.planting)
 
     def test_harvest_list_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:harvest_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "First harvest of Andorian Blue Peas")
 
     def test_harvest_detail_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:harvest_detail', args=[self.harvest.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "First harvest of Andorian Blue Peas")
 
     def test_harvest_create_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'plants': [self.planting.id],
             'date': timezone.now().date(),
@@ -74,10 +74,11 @@ class HarvestViewsTestCase(TestCase):
         }
         response = self.client.post(reverse('farm:harvest_create'), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
-        self.assertTrue(Harvest.objects.filter(description='Second harvest').exists())
+        created_harvest = Harvest.objects.filter(description='Second harvest').first()
+        self.assertIsNotNone(created_harvest)
+        self.assertEqual(created_harvest.customer, self.customer)
 
     def test_harvest_update_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'plants': [self.planting.id],
             'date': timezone.now().date(),
@@ -91,7 +92,6 @@ class HarvestViewsTestCase(TestCase):
         self.assertEqual(self.harvest.description, 'Updated harvest description')
 
     def test_harvest_delete_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.post(reverse('farm:harvest_delete', args=[self.harvest.id]))
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.assertFalse(Harvest.objects.filter(id=self.harvest.id).exists())

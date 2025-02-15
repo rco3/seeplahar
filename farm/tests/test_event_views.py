@@ -15,6 +15,8 @@ class EventViewsTestCase(TestCase):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
         self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
+        self.client.login(username="picard", password="earlgrey")
+
         self.taxon = Taxon.objects.create(
             name="Andorian Blue Peas",
             species_name="Pisum andorii",
@@ -39,13 +41,12 @@ class EventViewsTestCase(TestCase):
             type="watering",
             date=timezone.now(),
             description="Watered Andorian Blue Peas",
-            customer=self.customer,
             content_type=ContentType.objects.get_for_model(Planting),
-            object_id=self.planting.id
+            object_id=self.planting.id,
+            customer=self.customer
         )
 
     def test_event_create_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'type': 'fertilizing',
             'date': timezone.now().date(),
@@ -54,15 +55,6 @@ class EventViewsTestCase(TestCase):
             'related_item_id': str(self.planting.id),
         }
         response = self.client.post(reverse('farm:event_create'), data)
-
-        if response.status_code != 302:
-            print(f"Response content: {response.content.decode()}")
-
-            from farm.forms import EventForm
-            form = EventForm(data)
-            if not form.is_valid():
-                print(f"Form errors: {form.errors}")
-
         self.assertEqual(response.status_code, 302)  # Redirect on success
         created_event = Event.objects.filter(description='Fertilized Andorian Blue Peas').first()
         self.assertIsNotNone(created_event)
@@ -71,24 +63,14 @@ class EventViewsTestCase(TestCase):
         self.assertEqual(created_event.object_id, self.planting.id)
 
     def test_event_update_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'type': 'pruning',
             'date': timezone.now().date(),
             'description': 'Pruned Andorian Blue Peas',
             'related_item_type': 'planting',
-            'related_item_id': str(self.planting.id),  # Convert UUID to string
+            'related_item_id': str(self.planting.id),
         }
         response = self.client.post(reverse('farm:event_update', args=[self.event.id]), data)
-
-        if response.status_code != 302:
-            print(f"Response content: {response.content.decode()}")
-
-            from farm.forms import EventForm
-            form = EventForm(data, instance=self.event, request=response.wsgi_request)
-            if not form.is_valid():
-                print(f"Form errors: {form.errors}")
-
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.event.refresh_from_db()
         self.assertEqual(self.event.type, 'pruning')
@@ -97,19 +79,16 @@ class EventViewsTestCase(TestCase):
         self.assertEqual(self.event.object_id, self.planting.id)
 
     def test_event_list_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:event_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Watered Andorian Blue Peas")
 
     def test_event_detail_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:event_detail', args=[self.event.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "Watered Andorian Blue Peas")
 
     def test_event_delete_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.post(reverse('farm:event_delete', args=[self.event.id]))
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.assertFalse(Event.objects.filter(id=self.event.id).exists())

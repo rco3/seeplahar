@@ -8,11 +8,14 @@ from django.utils import timezone
 
 User = get_user_model()
 
+
 class SeedlingBatchViewsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
         self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
+        self.client.login(username="picard", password="earlgrey")
+
         self.taxon = Taxon.objects.create(
             name="Andorian Blue Peas",
             species_name="Pisum andorii",
@@ -43,19 +46,16 @@ class SeedlingBatchViewsTestCase(TestCase):
         )
 
     def test_seedlingbatch_list_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:seedlingbatch_list'))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "seedlings")
 
     def test_seedlingbatch_detail_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.get(reverse('farm:seedlingbatch_detail', args=[self.seedling_batch.id]))
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, "seedlings")
 
     def test_seedlingbatch_create_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'seed_lot': self.seedlot.id,
             'date': timezone.now().date(),
@@ -67,10 +67,11 @@ class SeedlingBatchViewsTestCase(TestCase):
         }
         response = self.client.post(reverse('farm:seedlingbatch_create'), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
-        self.assertTrue(SeedlingBatch.objects.filter(quantity=30).exists())
+        created_batch = SeedlingBatch.objects.filter(quantity=30).first()
+        self.assertIsNotNone(created_batch)
+        self.assertEqual(created_batch.customer, self.customer)
 
     def test_seedlingbatch_update_view(self):
-        self.client.login(username="picard", password="earlgrey")
         data = {
             'seed_lot': self.seedlot.id,
             'date': timezone.now().date(),
@@ -84,7 +85,6 @@ class SeedlingBatchViewsTestCase(TestCase):
         self.assertEqual(self.seedling_batch.status, 'transplanted')
 
     def test_seedlingbatch_delete_view(self):
-        self.client.login(username="picard", password="earlgrey")
         response = self.client.post(reverse('farm:seedlingbatch_delete', args=[self.seedling_batch.id]))
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.assertFalse(SeedlingBatch.objects.filter(id=self.seedling_batch.id).exists())

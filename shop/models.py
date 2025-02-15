@@ -4,6 +4,8 @@ from farm.models import SeedLot, Harvest, SeedlingBatch
 from media.models import Photo
 from users.models import CustomerAwareModel
 
+#shop/models.py
+
 
 class SeedPackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -14,9 +16,13 @@ class SeedPackage(CustomerAwareModel):
     description = models.TextField(blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='seed_packages')
 
-
     def __str__(self):
         return f'Seed Package: {self.seed_lot.name} - {self.quantity} {self.quantity_units}'
+
+    class Meta:
+        verbose_name = 'seedpackage'
+        verbose_name_plural = 'seedpackages'
+
 
 class ProducePackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -27,9 +33,13 @@ class ProducePackage(CustomerAwareModel):
     description = models.TextField(blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='produce_packages')
 
-
     def __str__(self):
         return f'Produce Package: {self.harvest} - {self.quantity} {self.quantity_units}'
+
+    class Meta:
+        verbose_name = 'producepackage'
+        verbose_name_plural = 'producepackages'
+
 
 class PlantPackage(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -40,6 +50,9 @@ class PlantPackage(CustomerAwareModel):
     seedling_batch = models.ForeignKey(SeedlingBatch, on_delete=models.SET_NULL, null=True, blank=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='PlantPackages')
 
-
     def __str__(self):
         return f'Planting Package created on {self.date_packaged}'
+
+    class Meta:
+        verbose_name = 'plantpackage'
+        verbose_name_plural = 'plantpackages'

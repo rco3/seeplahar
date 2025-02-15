@@ -1,5 +1,5 @@
 from django import forms
-from .models import Variety, Taxon, Synonym, Characteristic
+from .models import Variety, Taxon, Characteristic, CharacteristicValue
 from django.forms import inlineformset_factory
 from autocomplete import HTMXAutoComplete, widgets
 
@@ -10,26 +10,36 @@ class VarietyForm(forms.ModelForm):
         model = Variety
         fields = ['name', 'taxon', 'description', 'photos']
 
-# class CharacteristicForm(forms.ModelForm):
-#     class Meta:
-#         model = Characteristic
-#         fields = ['name', 'value']
-
-
 class CharacteristicForm(forms.ModelForm):
     class Meta:
         model = Characteristic
-        fields = ['name', 'value']
+        fields = ['name']
         widgets = {
             'name': widgets.Autocomplete(
                 name='characteristic_name',
                 options=dict(model=Characteristic, field='name')
             ),
+        }
+
+class CharacteristicValueForm(forms.ModelForm):
+    class Meta:
+        model = CharacteristicValue
+        fields = ['characteristic', 'value']
+        widgets = {
+            'characteristic': forms.HiddenInput(),
             'value': widgets.Autocomplete(
                 name='characteristic_value',
-                options=dict(model=Characteristic, field='value')
-            )
+                options=dict(model=CharacteristicValue, field='value')
+            ),
         }
+
+CharacteristicFormSet = forms.inlineformset_factory(
+    Characteristic,
+    CharacteristicValue,
+    form=CharacteristicValueForm,
+    extra=1,
+    can_delete=True
+)
 
 
 class TaxonForm(forms.ModelForm):
@@ -37,7 +47,3 @@ class TaxonForm(forms.ModelForm):
         model = Taxon
         fields = ['name', 'species_name', 'type', 'description']
 
-class SynonymForm(forms.ModelForm):
-    class Meta:
-        model = Synonym
-        fields = ['name', 'taxon']

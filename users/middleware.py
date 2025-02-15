@@ -1,26 +1,23 @@
-from threading import local
-import logging
+# users/middleware.py
+from django.http import Http404
 
-logger = logging.getLogger(__name__)
 
-_customer = local()
+from django.utils.deprecation import MiddlewareMixin
+from users.customer_context import set_current_customer, get_current_customer, clear_current_customer
 
-class CustomerMiddleware:
-    def __init__(self, get_response):
-        self.get_response = get_response
 
-    def __call__(self, request):
-        # logger.debug(f"CustomerMiddleware - User: {request.user}")
+class CustomerMiddleware(MiddlewareMixin):
+    def process_request(self, request):
         if request.user.is_authenticated:
-            _customer.value = request.user.customer
-            # logger.debug(f"CustomerMiddleware - Setting customer: {_customer.value}")
+            # print(f"Middleware: Setting customer for user: {request.user.username}")
+            set_current_customer(request.user.customer)
         else:
-            _customer.value = None
-            # logger.debug("CustomerMiddleware - No authenticated user")
-        response = self.get_response(request)
-        return response
+            # print("Middleware: No authenticated user, setting customer to None")
+            set_current_customer(None)
+        # print(f"Middleware: Customer context after setting: {get_current_customer()}")
 
-def get_current_customer():
-    customer = getattr(_customer, 'value', None)
-    # logger.debug(f"get_current_customer called - Returning: {customer}")
-    return customer
+    def process_response(self, request, response):
+        # print(f"Middleware: Customer context before clearing: {get_current_customer()}")
+        clear_current_customer()
+        # print("Middleware: Customer context cleared")
+        return response

@@ -43,10 +43,10 @@
                 <li class="group relative">
                     <a href="#" class="hover:underline p-2 block">Type</a>
                     <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
-                        <li><a href="{% url 'taxon:taxon-list' type='fruit' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Fruits</a></li>
-                        <li><a href="{% url 'taxon:taxon-list' type='vegetable' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Vegetables</a></li>
-                        <li><a href="{% url 'taxon:taxon-list' type='herb' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Herbs</a></li>
-                        <li><a href="{% url 'taxon:taxon-list' type='flower' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Flowers</a></li>
+                        <li><a href="{% url 'taxon:taxon_type_list' type='fruit' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Fruits</a></li>
+                        <li><a href="{% url 'taxon:taxon_type_list' type='vegetable' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Vegetables</a></li>
+                        <li><a href="{% url 'taxon:taxon_type_list' type='herb' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Herbs</a></li>
+                        <li><a href="{% url 'taxon:taxon_type_list' type='flower' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Flowers</a></li>
                     </ul>
                 </li>
                 <li class="group relative">
@@ -70,7 +70,6 @@
                         <li><a href="{% url 'dashboard' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Dashboard</a></li>
                         <li><a href="{% url 'taxon:variety_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Variety</a></li>
                         <li><a href="{% url 'taxon:taxon_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Taxon</a></li>
-                        <li><a href="{% url 'taxon:synonym_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New Synonym</a></li>
                         <li><a href="{% url 'farm:seedlot_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New SeedLot</a></li>
                         <li><a href="{% url 'farm:seedlingbatch_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New SeedlingBatch</a></li>
                         <li><a href="{% url 'farm:planting_create' %}" class="block px-4 py-2 text-primary-dark hover:text-accent">Add New planting</a></li>

@@ -31,7 +31,7 @@ urlpatterns = [
     path("__reload__/", include("django_browser_reload.urls")),
     path('taxon/', include('taxon.urls', namespace='taxon')),
     path('farm/', include('farm.urls', namespace='farm')),
-    # path('shop/', include('shop.urls', namespace='shop')),
+    path('shop/', include('shop.urls', namespace='shop')),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),
     path('<uuid:pk>/', GenericDetailView.as_view(), name='generic-detail'),

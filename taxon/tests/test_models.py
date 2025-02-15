@@ -1,5 +1,5 @@
 from django.test import TestCase
-from taxon.models import Taxon, Variety
+from taxon.models import Taxon, Variety, Characteristic
 import uuid
 
 from users.models import Customer
@@ -72,3 +72,5 @@ class VarietyModelTests(TestCase):
         variety_id = self.variety.id
         self.variety.delete()
         self.assertFalse(Variety.objects.filter(id=variety_id).exists())
+
+

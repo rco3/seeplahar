@@ -1,13 +1,13 @@
 {% extends "base.html" %}
 {% load static %}
 
-{% block title %}{{ taxon_type }}{% endblock %}
+{% block title %}{{ model_verbose_name_plural }}{% endblock %}
 
 {% block content %}
-<h1 class="text-2xl font-bold mb-4">{{ taxon_type }}</h1>
+<h1 class="text-2xl font-bold mb-4">{{ model_verbose_name_plural }}</h1>
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
-    {% for taxon in taxons %}
-    <a href="{% url 'taxon:variety-list' type=taxon.type taxon_id=taxon.id %}" class="relative group block bg-white rounded-lg shadow-lg overflow-hidden">
+    {% for taxon in object_list %}
+    <a href="{% url 'taxon:taxon_type_list' type=taxon.type %}" class="relative group block bg-white rounded-lg shadow-lg overflow-hidden">
         <img src="{% static 'images/' %}{{ taxon.name|lower }}.jpg" alt="{{ taxon.name }}" class="w-full h-40 object-cover">
         <div class="p-4">
             <h2 class="text-lg font-semibold">{{ taxon.name }}</h2>

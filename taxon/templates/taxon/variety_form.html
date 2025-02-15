@@ -9,21 +9,15 @@
     {% csrf_token %}
     {{ form.as_p }}
 
-    <div>
-        <label for="characteristic-name" class="block text-sm font-medium text-gray-700">Characteristic Name</label>
-        <input type="text" id="characteristic-name" class="autocomplete-input" name="term" placeholder="Type to filter tiles..." autocomplete="off" hx-get="{% url 'taxon:characteristicNameAutoComplete' %}" hx-trigger="keyup changed delay:500ms" hx-target="#characteristic-container" hx-params="*">
-    </div>
+    <h2 class="text-2xl font-bold mt-4">Characteristics</h2>
+    {{ characteristic_value_formset.management_form }}
+    {% for characteristic_form in characteristic_value_formset %}
+        <div class="mt-2">
+            {{ characteristic_form.as_p }}
+        </div>
+    {% endfor %}
 
-    <div id="characteristic-container" class="tile-container">
-        <!-- Tiles will be inserted here by HTMX -->
-    </div>
-
-    <div>
-        <label for="characteristic-value" class="block text-sm font-medium text-gray-700">Characteristic Value</label>
-        <input type="text" id="characteristic-value" class="autocomplete-input" name="term" placeholder="Type to filter tiles..." autocomplete="off" hx-get="{% url 'taxon:characteristicValueAutoComplete' %}" hx-trigger="keyup changed delay:500ms" hx-target="#characteristic-container">
-    </div>
-
-    <button type="submit" class="bg-green-500 text-white px-4 py-2">Save</button>
+    <button type="submit" class="bg-green-500 text-white px-4 py-2 mt-4">Save</button>
 </form>
 
 <script>

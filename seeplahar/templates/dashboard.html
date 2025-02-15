@@ -8,7 +8,6 @@
     {% if user|has_perm:'taxon.add_variety' %}
     <li><a href="{% url 'taxon:variety_create' %}">Add New Variety</a></li>
     <li><a href="{% url 'taxon:taxon_create' %}">Add New Taxon</a></li>
-    <li><a href="{% url 'taxon:synonym_create' %}">Add New Synonym</a></li>
     {% endif %}
     {% if user|has_perm:'farm.add_seedlot' %}
     <li><a href="{% url 'farm:seedlot_create' %}">Add New SeedLot</a></li>

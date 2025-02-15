@@ -5,6 +5,28 @@ from media.models import Photo
 
 # taxon/models.py
 
+
+class Characteristic(CustomerAwareModel):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100)
+
+    class Meta:
+        unique_together = ['name', 'customer']
+
+    def __str__(self):
+        return self.name
+
+
+class CharacteristicValue(models.Model):
+    characteristic = models.ForeignKey(Characteristic, on_delete=models.CASCADE)
+    value = models.CharField(max_length=100)
+    taxon = models.ForeignKey('Taxon', on_delete=models.CASCADE, null=True, blank=True)
+    variety = models.ForeignKey('Variety', on_delete=models.CASCADE, null=True, blank=True)
+
+    class Meta:
+        unique_together = [('characteristic', 'taxon'), ('characteristic', 'variety')]
+
+
 class Taxon(CustomerAwareModel):
     FRUIT = 'fruit'
     VEGETABLE = 'vegetable'
@@ -38,6 +60,7 @@ class Taxon(CustomerAwareModel):
     type = models.CharField(max_length=50, choices=TYPE_CHOICES, default=OTHER)
     description = models.TextField(blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='taxons')
+    characteristics = models.ManyToManyField(Characteristic, through=CharacteristicValue)
 
     def __str__(self):
         return self.name
@@ -45,14 +68,6 @@ class Taxon(CustomerAwareModel):
     class Meta:
         verbose_name_plural = "Taxa"
 
-
-class Synonym(CustomerAwareModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    taxon = models.ForeignKey(Taxon, related_name='synonyms', on_delete=models.CASCADE)
-
-    def __str__(self):
-        return self.name
 
 
 class Variety(CustomerAwareModel):
@@ -62,6 +77,7 @@ class Variety(CustomerAwareModel):
     description = models.TextField(blank=True, null=True)
     # origin = models.CharField(max_length=100, blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='varieties')
+    characteristics = models.ManyToManyField(Characteristic, through=CharacteristicValue)
 
     def __str__(self):
         return self.name
@@ -69,11 +85,4 @@ class Variety(CustomerAwareModel):
     class Meta:
         verbose_name_plural = "Varieties"
 
-class Characteristic(CustomerAwareModel):
-    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    name = models.CharField(max_length=100)
-    value = models.CharField(max_length=100)
-    varieties = models.ManyToManyField('Variety', related_name='characteristics')
 
-    def __str__(self):
-        return f"{self.name}: {self.value}"

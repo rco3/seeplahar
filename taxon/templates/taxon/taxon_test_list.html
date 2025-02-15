@@ -13,7 +13,7 @@
             <ul>
                 {% for taxon in taxons %}
                     <li>
-                        <a href="{% url 'taxon:taxon-detail' pk=taxon.pk %}" class="text-blue-600 hover:underline">{{ taxon.name }}</a>
+                        <a href="{% url 'taxon:taxon_detail' pk=taxon.pk %}" class="text-blue-600 hover:underline">{{ taxon.name }}</a>
                     </li>
                 {% endfor %}
             </ul>

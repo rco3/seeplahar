@@ -60,13 +60,14 @@ class Location(CustomerAwareModel):
 class Harvest(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     plants = models.ManyToManyField('Planting', related_name='harvests')
+    variety = models.ForeignKey('taxon.Variety', on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField(default=datetime.now)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     units = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
     photos = models.ManyToManyField(Photo, blank=True, related_name='harvests')
     source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True, related_name='sourced_harvests')
-    # organization represents the external source from which the Item was obtained
+
     def __str__(self):
         return f'Harvest on {self.date}'
 

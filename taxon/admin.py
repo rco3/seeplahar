@@ -16,8 +16,8 @@ class VarietyAdmin(admin.ModelAdmin):
     inlines = [CharacteristicInline]
 
 class CharacteristicAdmin(admin.ModelAdmin):
-    list_display = ('name', 'value')
-    search_fields = ('name', 'value')
+    list_display = ('name',)
+    search_fields = ('name',)
 
 admin.site.register(Taxon, TaxonAdmin)
 admin.site.register(Variety, VarietyAdmin)
