@@ -88,9 +88,18 @@ class PartnerAdmin(CustomerAwareAdmin):
 
 @admin.register(User)
 class UserAdmin(CustomerAwareAdmin, DjangoUserAdmin):
-    list_display = ('username', 'email', 'first_name', 'last_name', 'customer', 'is_staff')
-    search_fields = ('username', 'email', 'first_name', 'last_name', 'customer__name')
+    list_display = ('username', 'first_name', 'last_name', 'customer', 'is_staff')
+    search_fields = ('username', 'first_name', 'last_name', 'customer__name')
     list_filter = ('is_staff', 'is_superuser', 'customer')
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        # Remove email from existing fieldsets
+        for fieldset in self.fieldsets:
+            fields = list(fieldset[1]['fields'])
+            if 'email' in fields:
+                fields.remove('email')
+                fieldset[1]['fields'] = tuple(fields)
 
     fieldsets = DjangoUserAdmin.fieldsets + (
         ('Customer Info', {'fields': ('customer',)}),
@@ -98,7 +107,6 @@ class UserAdmin(CustomerAwareAdmin, DjangoUserAdmin):
     add_fieldsets = DjangoUserAdmin.add_fieldsets + (
         ('Customer Info', {'fields': ('customer',)}),
     )
-
 
 @admin.register(EmailAddress)
 class EmailAddressAdmin(BaseContactAdmin):

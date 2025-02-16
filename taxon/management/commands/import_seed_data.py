@@ -3,19 +3,37 @@ import logging
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
 from django.core.management.base import BaseCommand
-from taxon.models import Taxon, Variety, Characteristic
+from taxon.models import Taxon, Variety, Characteristic, CharacteristicValue
 from farm.models import SeedLot
+from users.models import Customer
+from users.customer_context import CustomerContext
 
-# Set up logging
 logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
+
 
 class Command(BaseCommand):
     help = 'Import seed data from CSV files'
 
+    def add_arguments(self, parser):
+        parser.add_argument(
+            '--customer',
+            type=str,
+            required=True,
+            help='Customer name to associate with imported data'
+        )
+
     def handle(self, *args, **kwargs):
-        self.import_seed_varieties()
-        self.import_tomato_seeds()
+        customer_name = kwargs['customer']
+        try:
+            self.customer = Customer.objects.get(name=customer_name)
+        except Customer.DoesNotExist:
+            self.customer = Customer.objects.create(name=customer_name)
+            logger.info(f"Created new customer: {customer_name}")
+
+        with CustomerContext(self.customer):
+            self.import_seed_varieties()
+            self.import_tomato_seeds()
 
     def import_seed_varieties(self):
         with open('taxon/management/sample_data/seed_varieties.csv', newline='') as csvfile:
@@ -26,13 +44,19 @@ class Command(BaseCommand):
                 taxon, created = Taxon.objects.get_or_create(
                     name=row['Common Name'],
                     species_name=row['Species'],
-                    defaults={'type': taxon_type}
+                    defaults={
+                        'type': taxon_type,
+                        'customer': self.customer
+                    }
                 )
                 logger.debug(f"Taxon: {taxon}, Created: {created}")
 
                 variety, created = Variety.objects.get_or_create(
                     name=row['Variety'],
-                    defaults={'taxon': taxon}
+                    defaults={
+                        'taxon': taxon,
+                        'customer': self.customer
+                    }
                 )
                 logger.debug(f"Variety: {variety}, Created: {created}")
 
@@ -41,7 +65,8 @@ class Command(BaseCommand):
                     variety=variety,
                     origin=row['Vendor'],
                     quantity=quantity,
-                    units=units
+                    units=units,
+                    customer=self.customer
                 )
                 logger.debug(f"SeedLot created for variety {variety}")
 
@@ -50,21 +75,33 @@ class Command(BaseCommand):
             reader = csv.DictReader(csvfile)
             for row in reader:
                 logger.debug(f"Processing row: {row}")
+                logger.debug(f"CSV Headers: {list(row.keys())}")
                 taxon, created = Taxon.objects.get_or_create(
                     name='Tomato',
                     species_name='solanum lycopersicum',
-                    defaults={'type': 'vegetable'}
+                    defaults={
+                        'type': 'vegetable',
+                        'customer': self.customer
+                    }
                 )
                 logger.debug(f"Taxon: {taxon}, Created: {created}")
 
                 variety, created = Variety.objects.get_or_create(
                     name=row['Name'],
-                    defaults={'taxon': taxon, 'description': row['Description']}
+                    defaults={
+                        'taxon': taxon,
+                        'description': row['Description'],
+                        'customer': self.customer
+                    }
                 )
                 logger.debug(f"Variety: {variety}, Created: {created}")
 
+                # Clean and verify row data
+                row_clean = {k.strip(): v for k, v in row.items()}
+                logger.debug(f"Cleaned row keys: {list(row_clean.keys())}")
+
                 characteristics = {
-                    'Planting Size': row['Planting Size'],
+                    'Plant Size': row['Planting Size'],
                     'Color': row['Color'],
                     'Shape': row['Shape'],
                     'Weight (Oz)': row['Oz  '],
@@ -84,22 +121,34 @@ class Command(BaseCommand):
                     if color:
                         char, created = Characteristic.objects.get_or_create(
                             name='Color',
-                            value=color
+                            defaults={'customer': self.customer}
                         )
                         logger.debug(f"Characteristic: {char}, Created: {created}")
-                        variety.characteristics.add(char)
-                        logger.debug(f"Added Characteristic {char} to Variety {variety}")
+
+                        # Update or create the characteristic value
+                        char_value, created = CharacteristicValue.objects.update_or_create(
+                            characteristic=char,
+                            variety=variety,
+                            defaults={'value': color}
+                        )
+                        logger.debug(f"CharacteristicValue: {char_value}, Created: {created}")
 
                 # Add other characteristics
                 for key, value in characteristics.items():
                     if key != 'Color' and value:  # Skip 'Color' as it's already handled
                         char, created = Characteristic.objects.get_or_create(
                             name=key,
-                            value=value
+                            defaults={'customer': self.customer}
                         )
                         logger.debug(f"Characteristic: {char}, Created: {created}")
-                        variety.characteristics.add(char)
-                        logger.debug(f"Added Characteristic {char} to Variety {variety}")
+
+                        # Update or create the characteristic value
+                        char_value, created = CharacteristicValue.objects.update_or_create(
+                            characteristic=char,
+                            variety=variety,
+                            defaults={'value': value}
+                        )
+                        logger.debug(f"CharacteristicValue: {char_value}, Created: {created}")
 
                 if row['Source'] or row['Date Acq'] or row['QOH']:
                     SeedLot.objects.create(
@@ -107,7 +156,8 @@ class Command(BaseCommand):
                         origin=row['Source'],
                         date_received=self.parse_date(row['Date Acq']),
                         quantity=self.parse_quantity(row['QOH']),
-                        units='seeds'
+                        units='seeds',
+                        customer=self.customer
                     )
                     logger.debug(f"SeedLot created for variety {variety}")
 

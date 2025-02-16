@@ -17,7 +17,11 @@
                     <h2 class="text-2xl font-semibold text-primary-dark">Seed Lots</h2>
                     <ul class="list-disc list-inside">
                         {% for seed_lot in object.seed_lots.all %}
-                            <li class="text-primary">{{ seed_lot.origin }}</li>
+                            <li class="text-primary">
+                                <a href="{% url 'farm:seedlot_detail' pk=seed_lot.id %}" class="hover:underline">
+                                    {{ seed_lot.origin }} ({{ seed_lot.quantity }} {{ seed_lot.units }}, received {{ seed_lot.date_received|date:"Y-m-d" }})
+                                </a>
+                            </li>
                         {% empty %}
                             <li class="text-primary">No seed lots available.</li>
                         {% endfor %}
@@ -31,10 +35,10 @@
                             </tr>
                         </thead>
                         <tbody>
-                            {% for characteristic in variety.characteristics.all %}
+                            {% for characteristic_value in variety.characteristicvalue_set.all %}
                                 <tr class="border-b">
-                                    <td class="pr-4 font-semibold text-right bg-primary-light rounded-l-lg">{{ characteristic.name }}</td>
-                                    <td class="pl-4 text-left text-primary-dark bg-white rounded-r-lg">{{ characteristic.value }}</td>
+                                    <td class="pr-4 font-semibold text-right bg-primary-light rounded-l-lg">{{ characteristic_value.characteristic.name }}</td>
+                                    <td class="pl-4 text-left text-primary-dark bg-white rounded-r-lg">{{ characteristic_value.value }}</td>
                                 </tr>
                             {% endfor %}
                         </tbody>

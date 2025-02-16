@@ -15,7 +15,7 @@
                 <p class="mt-2"><strong>Species:</strong> {{ taxon.species_name }}</p>
                 <p><strong>Type:</strong> {{ taxon.get_type_display }}</p>
                 <div class="mt-4">
-                    <h2 class="text-lg font-semibold text-center">Related Varieties</h2>
+                    <h2 class="text-lg font-semibold text-center">{{ taxon.name }} Varieties</h2>
                     <ul class="mt-2">
                         {% for variety in taxon.varieties.all %}
                             <li>
