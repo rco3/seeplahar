@@ -59,6 +59,7 @@ class GenericCreateView(CustomerAwareFormMixin, GenericModelView, BaseCreateView
 class GenericUpdateView(CustomerAwareFormMixin, GenericModelView, BaseUpdateView):
     pass
 
+
 # Other views should use CustomerAwareViewMixin if they need to be customer-aware
 class GenericListView(GenericModelView, BaseListView):
     template_name = 'base_list.html'
@@ -67,8 +68,15 @@ class GenericListView(GenericModelView, BaseListView):
         model_template = f"{self.app_name}/{self.model_name}_list.html"
         return [model_template, self.template_name]
 
+
 class GenericDetailView(GenericModelView, BaseDetailView):
-    pass
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['app_label'] = self.model._meta.app_label
+        context['model_name'] = self.model._meta.model_name
+        return context
+
 
 class GenericDeleteView(GenericModelView, BaseDeleteView):
     template_name = 'base_confirm_delete.html'

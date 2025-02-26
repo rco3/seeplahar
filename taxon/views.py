@@ -133,6 +133,9 @@ class VarietyDetailView(GenericDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['seed_lots'] = SeedLot.objects.filter(variety=self.object)
+        # Expose app_label and model_name for use in the template.
+        context['app_label'] = self.object._meta.app_label
+        context['model_name'] = self.object._meta.model_name
         return context
 
 

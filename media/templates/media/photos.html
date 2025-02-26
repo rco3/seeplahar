@@ -1,0 +1,24 @@
+{# media/photos.html #}
+{% load permissions %}
+
+<div id="{{ object_type }}-photos-{{ object_id }}"
+     class="dropzone min-h-64 min-w-full bg-gray-100"
+     data-url="{% url 'media:add_photo' object_type=object_type object_id=object_id %}">
+
+  <div id="photo-gallery-{{ object_id }}"
+       hx-trigger="photoUploaded from:body"
+       hx-get="{% url 'media:get_photos' object_type=object_type object_id=object_id %}"
+       hx-swap="innerHTML">
+
+    {% if photos %}
+      {% for photo in photos %}
+        {% include "media/photo_snippet.html" %}
+      {% endfor %}
+    {% endif %}
+
+    <div class="text-gray-600">
+        Drop photos here or click to upload
+    </div>
+
+  </div>
+</div>

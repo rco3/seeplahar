@@ -42,6 +42,7 @@ class UserManager(BaseUserManager):
 class Customer(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
+    photos = models.ManyToManyField('media.Photo', blank=True, related_name='customers')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -84,6 +85,7 @@ class CustomerAwareModel(models.Model):
 class Partner(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     name = models.CharField(max_length=255)
+    photos = models.ManyToManyField('media.Photo', blank=True, related_name='partners')
     is_active = models.BooleanField(default=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -99,6 +101,7 @@ class Partner(CustomerAwareModel):
 class User(AbstractUser, CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     username = models.CharField(max_length=30, unique=True, null=False, blank=False)
+    photos = models.ManyToManyField('media.Photo', blank=True, related_name='users')
     partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, related_name='users', null=True, blank=True)
     is_partner_admin = models.BooleanField(default=False)
     email = None  # This removes the email field

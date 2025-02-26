@@ -12,6 +12,7 @@
     {% load static tailwind_tags %}
     {% load permissions %}
     {% tailwind_css %}
+    {% block extra_head %}{% endblock %}  {# Add this block #}
 
     <style>
         html, body {
@@ -30,3 +31,8 @@
     {% include 'footer.html' %}
 </body>
 </html>
+
+{# Add to base.html #}
+{% block extra_js %}
+    
+{% endblock %}

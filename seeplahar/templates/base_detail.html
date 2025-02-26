@@ -1,6 +1,12 @@
 {% extends "base.html" %}
 {% load custom_tags %}
 
+{% block extra_head %}
+  {% include "dropzone_assets.html" %}
+{% endblock %}
+
+{% block title %}{{ object }}{% endblock %}
+
 {% block content %}
   <h1>{{ object }}</h1>
   
@@ -11,7 +17,17 @@
     {% endfor %}
   </dl>
 
+  {% if object|attribute:'photos' %}
+    <div id="photos-container">
+      {% include "media/photos.html" with object_type=app_label|add:'.'|add:model_name object_id=object.pk %}
+    </div>
+  {% endif %}
+
   <a href="{% url 'generic_update' app_label model_name object.pk %}">Edit</a>
   <a href="{% url 'generic_delete' app_label model_name object.pk %}">Delete</a>
   <a href="{% url 'generic_list' app_label model_name %}">Back to List</a>
+{% endblock %}
+
+{% block extra_js %}
+  {{ block.super }}
 {% endblock %}

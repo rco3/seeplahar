@@ -14,6 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.urls import include, path
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
+from django.conf import settings
+from django.conf.urls.static import static
 from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
@@ -29,6 +31,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('', HomePageView.as_view(), name='home'),
     path("__reload__/", include("django_browser_reload.urls")),
+    path('media/', include('media.urls', namespace='media')),
     path('taxon/', include('taxon.urls', namespace='taxon')),
     path('farm/', include('farm.urls', namespace='farm')),
     path('shop/', include('shop.urls', namespace='shop')),
@@ -45,4 +48,4 @@ urlpatterns = [
     path('<str:app_name>/<str:model_name>/<uuid:pk>/', GenericDetailView.as_view(), name='generic_detail'),
     path('<str:app_name>/<str:model_name>/<uuid:pk>/update/', GenericUpdateView.as_view(), name='generic_update'),
     path('<str:app_name>/<str:model_name>/<uuid:pk>/delete/', GenericDeleteView.as_view(), name='generic_delete'),
-]
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

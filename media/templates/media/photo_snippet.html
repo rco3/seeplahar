@@ -1,0 +1,12 @@
+{# media/photo_snippet.html #}
+{% load permissions %}
+<div class="photo-container">
+    <img src="{{ photo.image.url }}"
+         alt="{{ photo.description|default:'' }}"
+         class="object-cover w-full h-full">
+    {% if user|has_perm:'media.delete_photo' %}
+        <button class="delete-photo"
+                hx-delete="{% url 'media:delete_photo' photo.id %}"
+                hx-target="#{{ object_type }}-photos-{{ object_id }}">×</button>
+    {% endif %}
+</div>

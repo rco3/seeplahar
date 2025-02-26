@@ -1,0 +1,194 @@
+ <!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seeplahar</title>
+    <script src="/static/js/htmx.min.js"></script>
+
+
+
+
+
+
+<link rel="stylesheet" href="/static/css/dist/styles.css">
+
+
+
+
+
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+        }
+    </style>
+</head>
+<body class="bg-primary-lighter text-primary-dark flex flex-col min-h-screen">
+
+    <div class="flex-grow">
+
+  <h1>Create Plantpackage</h1>
+
+  <form method="post">
+    <input type="hidden" name="csrfmiddlewaretoken" value="2dTN9rDhJLeYWkCn4omZE7ZU3TcP6W9aknGYgXUIZ1Wr7fatpo0O85S11GeCTqU6">
+    <ul class="errorlist"><li>This field is required.</li></ul>
+  <p>
+    <label for="id_customer">Customer:</label>
+    <select name="customer" required aria-invalid="true" id="id_customer">
+  <option value="" selected>---------</option>
+
+  <option value="1ba94f3e-1fea-48c1-b0e0-c7db353b29b5">Test Customer</option>
+
+</select>
+
+
+  </p>
+
+
+  <p>
+    <label for="id_plants">Plants:</label>
+    <select name="plants" required id="id_plants" multiple>
+  <option value="bf6fb5c1-6bf8-4552-afc1-86d18030a751" selected>Test Variety - Test Location (1)</option>
+
+</select>
+
+
+  </p>
+
+
+  <p>
+    <label for="id_date_packaged">Date packaged:</label>
+    <input type="text" name="date_packaged" value="2024-07-02" required id="id_date_packaged">
+
+
+  </p>
+
+
+  <p>
+    <label for="id_quantity">Quantity:</label>
+    <input type="number" name="quantity" value="3" min="0" required id="id_quantity">
+
+
+  </p>
+
+
+  <p>
+    <label for="id_description">Description:</label>
+    <textarea name="description" cols="40" rows="10" id="id_description">
+</textarea>
+
+
+  </p>
+
+
+  <p>
+    <label for="id_seedling_batch">Seedling batch:</label>
+    <select name="seedling_batch" id="id_seedling_batch">
+  <option value="" selected>---------</option>
+
+</select>
+
+
+  </p>
+
+
+  <p>
+    <label for="id_photos">Photos:</label>
+    <select name="photos" id="id_photos" multiple>
+</select>
+
+
+
+
+  </p>
+    <button type="submit">Save</button>
+  </form>
+
+  <a href="/shop/plantpackage/">Cancel</a>
+
+    </div>
+
+
+<style>
+    /* Ensure dropdown menus stay visible */
+    .group:hover .group-hover\:flex {
+        display: flex;
+    }
+    .group:hover .group-hover\:block {
+        display: block;
+    }
+    /* Add a slight delay for hover out to ensure persistence */
+    .group .group-hover\:flex:hover,
+    .group .group-hover\:block:hover {
+        display: flex;
+    }
+
+    /* Add hover effects */
+    a.relative.group {
+        position: relative;
+        display: block;
+        overflow: hidden;
+        border-radius: 10px;
+        transition: transform 0.3s ease;
+    }
+
+    a.relative.group:hover {
+        transform: scale(1.05) rotate(1deg);
+    }
+</style>
+
+<footer class="bg-primary-dark text-primary-lighter py-4 fixed bottom-0 w-full">
+    <div class="container mx-auto">
+        <nav class="flex justify-between">
+            <ul class="flex space-x-4">
+                <!-- HOME icon link -->
+                <li class="group relative">
+                    <a href="/" class="hover:underline p-2 block">
+                        <svg class="w-6 h-6 inline-block" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9.75L12 3l9 6.75v11.25a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75v-5.25H9.75v5.25a.75.75 0 01-.75.75h-4.5a.75.75 0 01-.75-.75V9.75z"></path>
+                        </svg>
+                    </a>
+                </li>
+                <li class="group relative">
+                    <a href="#" class="hover:underline p-2 block">Type</a>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="/taxon/fruit/" class="block px-4 py-2 text-primary-dark hover:text-accent">Fruits</a></li>
+                        <li><a href="/taxon/vegetable/" class="block px-4 py-2 text-primary-dark hover:text-accent">Vegetables</a></li>
+                        <li><a href="/taxon/herb/" class="block px-4 py-2 text-primary-dark hover:text-accent">Herbs</a></li>
+                        <li><a href="/taxon/flower/" class="block px-4 py-2 text-primary-dark hover:text-accent">Flowers</a></li>
+                    </ul>
+                </li>
+                <li class="group relative">
+                    <a href="#" class="hover:underline p-2 block">Farm</a>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Operations</a></li>
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Histories</a></li>
+                    </ul>
+                </li>
+                <li class="group relative">
+                    <a href="#" class="hover:underline p-2 block">Shop</a>
+                    <ul class="absolute left-0 bottom-full -mb-2 hidden group-hover:flex flex-col bg-primary-light p-2 rounded-lg">
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Seeds</a></li>
+                        <li><a href="#" class="block px-4 py-2 text-primary-dark hover:text-accent">Produce</a></li>
+                    </ul>
+                </li>
+
+            </ul>
+            <ul class="flex space-x-4">
+                <!-- Login/Logout link -->
+
+                <li class="group relative">
+                    <a href="/logout/" class="hover:underline p-2 block">Logout (testuser)</a>
+                </li>
+
+            </ul>
+        </nav>
+    </div>
+</footer>
+
+</body>
+</html>
