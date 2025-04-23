@@ -59,6 +59,7 @@ def get_photos(request, object_type, object_id):
         'object_id': object_id
     })
 
+@csrf_exempt
 @permission_required('media.delete_photo')
 def delete_photo(request, photo_id):
     if request.method != 'DELETE':
