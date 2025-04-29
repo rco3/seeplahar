@@ -30,3 +30,11 @@ def getattribute(value, arg):
 @register.filter(name='type_of')
 def type_of(value):
     return type(value).__name__
+
+@register.filter(name='hasattr')
+def hasattr_filter(obj, attr_name):
+    """Checks if an object has a specific attribute"""
+    try:
+        return hasattr(obj, str(attr_name))
+    except Exception:
+        return False

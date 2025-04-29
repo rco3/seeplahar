@@ -17,7 +17,7 @@
     {% endfor %}
   </dl>
 
-  {% if object|attribute:'photos' %}
+  {% if object|hasattr:'photos' %}
     <div id="photos-container">
       {% include "media/photos.html" with object_type=app_label|add:'.'|add:model_name object_id=object.pk %}
     </div>
