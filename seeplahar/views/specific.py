@@ -5,12 +5,14 @@ from django.urls import reverse_lazy, reverse
 from django.shortcuts import render, get_object_or_404, redirect
 from django.views import View
 from django.contrib.auth import login as auth_login
-from taxon.models import Variety
 from farm.models import Event, Planting, SeedLot, SeedlingBatch, Harvest
 from django.contrib.auth import logout
 from django.shortcuts import redirect, render
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.mixins import PermissionRequiredMixin
+from users.customer_context import get_current_customer
+from taxon.models import Taxon, Variety
+from users.models import Partner
 
 
 class CustomLoginView(View):
@@ -67,3 +69,84 @@ class HomePageView(TemplateView):
             },
         ]
         return context
+
+
+# Add this to seeplahar/views/specific.py
+
+
+class UniversalDetailView(View):
+    """
+    Universal UUID lookup view that searches across all models
+    to find which one contains the given UUID, then redirects
+    to the appropriate detail view.
+    """
+
+    def get(self, request, pk):
+        customer = get_current_customer()
+
+        # Define all models to search, in order of priority
+        models_to_check = [
+            # Farm operations (most commonly scanned)
+            (SeedLot, 'farm', 'seedlot'),
+            (Planting, 'farm', 'planting'),
+            (Harvest, 'farm', 'harvest'),
+            (SeedlingBatch, 'farm', 'seedlingbatch'),
+
+            # Taxonomy (less frequently scanned directly)
+            (Variety, 'taxon', 'variety'),
+            (Taxon, 'taxon', 'taxon'),
+
+            # Admin objects (rarely scanned)
+            (Partner, 'users', 'partner'),
+        ]
+
+        for model_class, app_label, model_name in models_to_check:
+            try:
+                # Check if object exists with this UUID for current customer
+                if hasattr(model_class, 'customer'):
+                    obj = model_class.objects.get(pk=pk, customer=customer)
+                else:
+                    # For models without customer field (shouldn't happen in your system)
+                    obj = model_class.objects.get(pk=pk)
+
+                # Found it! Redirect to the appropriate detail view
+                return redirect('generic_detail', app_name=app_label, model_name=model_name, pk=pk)
+
+            except model_class.DoesNotExist:
+                # Not found in this model, try the next one
+                continue
+
+        # If we get here, the UUID wasn't found in any model
+        raise Http404(f"No object found with ID {pk}")
+
+
+# Alternative implementation if you prefer a function-based view:
+def universal_detail_view(request, pk):
+    """
+    Function-based version of universal UUID lookup
+    """
+    customer = get_current_customer()
+
+    models_to_check = [
+        (SeedLot, 'farm', 'seedlot'),
+        (Planting, 'farm', 'planting'),
+        (Harvest, 'farm', 'harvest'),
+        (SeedlingBatch, 'farm', 'seedlingbatch'),
+        (Variety, 'taxon', 'variety'),
+        (Taxon, 'taxon', 'taxon'),
+        (Partner, 'users', 'partner'),
+    ]
+
+    for model_class, app_label, model_name in models_to_check:
+        try:
+            if hasattr(model_class, 'customer'):
+                obj = model_class.objects.get(pk=pk, customer=customer)
+            else:
+                obj = model_class.objects.get(pk=pk)
+
+            return redirect('generic_detail', app_name=app_label, model_name=model_name, pk=pk)
+
+        except model_class.DoesNotExist:
+            continue
+
+    raise Http404(f"No object found with ID {pk}")

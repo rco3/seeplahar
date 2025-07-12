@@ -2,7 +2,8 @@ from django.urls import path
 from django.views.generic import RedirectView
 from .views import (
     TaxonListView, VarietyListView, VarietyCreateView, CharacteristicNameAutoComplete,
-    CharacteristicValueAutoComplete, test_autocomplete, TaxonDeleteView, add_characteristic_form, VarietyDeleteView
+    CharacteristicValueAutoComplete, test_autocomplete, TaxonDeleteView, add_characteristic_form, VarietyDeleteView,
+    VarietyUpdateView
 )
 from seeplahar.views.generic import GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
 from .models import Taxon, Variety
@@ -30,7 +31,7 @@ urlpatterns = [
     path('taxa/<str:type>/', RedirectView.as_view(pattern_name='taxon:taxon_type_list'), name='taxon_type_redirect'),
 
     # Generic view paths
-    path('variety/<uuid:pk>/update/', GenericUpdateView.as_view(model=Variety, form_class=VarietyForm),
+    path('variety/<uuid:pk>/update/', VarietyUpdateView.as_view(),
          name='variety_update'),
     path('variety/<uuid:pk>/delete/', VarietyDeleteView.as_view(), name='variety_delete'),
     path('taxon/<uuid:pk>/update/', GenericUpdateView.as_view(model=Taxon, form_class=TaxonForm), name='taxon_update'),

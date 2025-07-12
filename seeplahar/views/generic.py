@@ -56,6 +56,7 @@ class GenericModelView:
 class GenericCreateView(CustomerAwareFormMixin, GenericModelView, BaseCreateView):
     pass
 
+
 class GenericUpdateView(CustomerAwareFormMixin, GenericModelView, BaseUpdateView):
     pass
 

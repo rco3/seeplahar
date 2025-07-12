@@ -5,91 +5,226 @@
 {% block content %}
 <h1 class="text-3xl font-bold">Add New Variety</h1>
 
-<form method="post">
+<form method="post" class="space-y-6">
     {% csrf_token %}
-    {{ form.as_p }}
 
-    <h2 class="text-2xl font-bold mt-4">Characteristics</h2>
-    {{ characteristic_value_formset.management_form }}
-    {% for characteristic_form in characteristic_value_formset %}
-        <div class="mt-2">
-            {{ characteristic_form.as_p }}
+    <div class="mb-4">
+        <label for="id_name" class="block text-sm font-medium text-gray-700">Name</label>
+        {{ form.name }}
+    </div>
+
+    <div class="mb-4">
+        <label for="id_taxon" class="block text-sm font-medium text-gray-700">Taxon</label>
+        {{ form.taxon }}
+    </div>
+
+    <div class="mb-4">
+        <label for="id_description" class="block text-sm font-medium text-gray-700">Description</label>
+        {{ form.description }}
+    </div>
+
+    <div class="mb-4">
+        <label for="id_photos" class="block text-sm font-medium text-gray-700">Photos</label>
+        {{ form.photos }}
+    </div>
+
+    <!-- Characteristics Section -->
+    <div class="border p-4 rounded-lg bg-gray-50 mb-6">
+        <h2 class="text-xl font-semibold mb-4">Characteristics</h2>
+
+        <div class="characteristic-input-row grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <div class="char-name-field">
+                <label for="char-name" class="block text-sm font-medium text-gray-700">Characteristic Name</label>
+                <input type="text"
+                       id="char-name"
+                       name="char-name"
+                       class="w-full border rounded p-2"
+                       placeholder="Type characteristic name..."
+                       autocomplete="off"
+                       hx-get="{% url 'taxon:characteristic_name_autocomplete' %}"
+                       hx-trigger="input changed delay:500ms"
+                       hx-target="#char-name-suggestions">
+                <div id="char-name-suggestions" class="suggestions-container bg-white shadow-lg rounded-md mt-1 max-h-40 overflow-y-auto"></div>
+            </div>
+
+            <div class="char-value-field">
+                <label for="char-value" class="block text-sm font-medium text-gray-700">Value</label>
+                <input type="text"
+                       id="char-value"
+                       name="term"
+                       class="w-full border rounded p-2"
+                       placeholder="Type value..."
+                       autocomplete="off"
+                       hx-get="{% url 'taxon:characteristic_value_autocomplete' %}"
+                       hx-trigger="input changed delay:500ms"
+                       hx-include="#char-name"
+                       hx-target="#char-value-suggestions">
+                <div id="char-value-suggestions" class="suggestions-container bg-white shadow-lg rounded-md mt-1 max-h-40 overflow-y-auto"></div>
+            </div>
+
+            <div class="add-button-field flex items-end">
+                <button type="button"
+                        id="add-char-btn"
+                        class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">
+                    Add Characteristic
+                </button>
+            </div>
         </div>
-    {% endfor %}
 
-    <button type="submit" class="bg-green-500 text-white px-4 py-2 mt-4">Save</button>
+        <!-- Display area for added characteristics -->
+        <div id="added-characteristics" class="mt-4">
+            <h3 class="text-lg font-medium mb-2">Added Characteristics:</h3>
+            <div id="char-list" class="space-y-2">
+                <!-- Characteristic pairs will be added here -->
+            </div>
+        </div>
+
+        <!-- Hidden fields for form submission -->
+        <div id="hidden-characteristics">
+            <!-- Hidden form fields will be added here by JavaScript -->
+        </div>
+    </div>
+
+    <button type="submit" class="bg-green-500 text-white px-6 py-2 rounded hover:bg-green-600">
+        Save Variety
+    </button>
 </form>
 
 <script>
-document.body.addEventListener('click', function(event) {
-    if (event.target.matches('.tile')) {
-        const nameInputField = document.querySelector('#characteristic-name');
-        const valueInputField = document.querySelector('#characteristic-value');
-        const [name, value] = event.target.textContent.trim().split(': ');
-        nameInputField.value = name;
-        valueInputField.value = value;
-        document.querySelector('#characteristic-container').innerHTML = '';
-    }
-});
+document.addEventListener('DOMContentLoaded', function() {
+    let charCounter = 0;
 
-document.querySelectorAll('.autocomplete-input').forEach(input => {
-    input.addEventListener('keydown', function(event) {
-        const tiles = document.querySelectorAll('.tile');
-        if (event.key === 'Enter' && tiles.length === 1) {
-            event.preventDefault();
-            const [name, value] = tiles[0].innerText.trim().split(': ');
-            if (this.id === 'characteristic-name') {
-                document.getElementById('characteristic-name').value = name;
-                document.getElementById('characteristic-value').value = value;
-            } else {
-                this.value = value;
-            }
-            document.getElementById('characteristic-container').innerHTML = '';
+    // Handle characteristic name suggestion clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('tile') && e.target.closest('#char-name-suggestions')) {
+            const fullText = e.target.textContent.trim();
+            const charName = fullText.split(':')[0].trim(); // Get just the part before the colon
+            document.getElementById('char-name').value = charName;
+            document.getElementById('char-name-suggestions').innerHTML = '';
+
+            // Clear the value field when characteristic changes
+            document.getElementById('char-value').value = '';
+            document.getElementById('char-value-suggestions').innerHTML = '';
         }
     });
 
-    input.addEventListener('keyup', function(event) {
-        console.log(`Search term for ${this.id}: ${this.value}`);
+    // Handle characteristic value suggestion clicks
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('tile') && e.target.closest('#char-value-suggestions')) {
+            const fullText = e.target.textContent.trim();
+            const charValue = fullText.split(':')[1].trim(); // Get just the part after the colon
+            document.getElementById('char-value').value = charValue;
+            document.getElementById('char-value-suggestions').innerHTML = '';
+        }
+    });
+
+    // Handle adding a characteristic-value pair
+    document.getElementById('add-char-btn').addEventListener('click', function() {
+        const charName = document.getElementById('char-name').value.trim();
+        const charValue = document.getElementById('char-value').value.trim();
+
+        if (charName && charValue) {
+            // Create visual representation
+            const charDiv = document.createElement('div');
+            charDiv.className = 'flex items-center justify-between bg-blue-50 border border-blue-200 rounded p-2';
+            charDiv.innerHTML = `
+                <span class="text-blue-800 font-medium">${charName}: ${charValue}</span>
+                <button type="button"
+                        class="remove-char text-red-500 hover:text-red-700 ml-2"
+                        data-index="${charCounter}">
+                    ✕
+                </button>
+            `;
+
+            // Create hidden form fields
+            const nameField = document.createElement('input');
+            nameField.type = 'hidden';
+            nameField.name = `characteristic_${charCounter}_name`;
+            nameField.value = charName;
+            nameField.setAttribute('data-index', charCounter);
+
+            const valueField = document.createElement('input');
+            valueField.type = 'hidden';
+            valueField.name = `characteristic_${charCounter}_value`;
+            valueField.value = charValue;
+            valueField.setAttribute('data-index', charCounter);
+
+            // Add to DOM
+            document.getElementById('char-list').appendChild(charDiv);
+            document.getElementById('hidden-characteristics').appendChild(nameField);
+            document.getElementById('hidden-characteristics').appendChild(valueField);
+
+            // Clear input fields
+            document.getElementById('char-name').value = '';
+            document.getElementById('char-value').value = '';
+            document.getElementById('char-name-suggestions').innerHTML = '';
+            document.getElementById('char-value-suggestions').innerHTML = '';
+
+            charCounter++;
+        } else {
+            alert('Please enter both a characteristic name and value.');
+        }
+    });
+
+    // Handle removing a characteristic
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-char')) {
+            const index = e.target.getAttribute('data-index');
+
+            // Remove visual element
+            e.target.closest('div').remove();
+
+            // Remove hidden fields
+            const nameField = document.querySelector(`input[name="characteristic_${index}_name"]`);
+            const valueField = document.querySelector(`input[name="characteristic_${index}_value"]`);
+            if (nameField) nameField.remove();
+            if (valueField) valueField.remove();
+        }
+    });
+
+    // Clear suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!e.target.closest('.char-name-field')) {
+            document.getElementById('char-name-suggestions').innerHTML = '';
+        }
+        if (!e.target.closest('.char-value-field')) {
+            document.getElementById('char-value-suggestions').innerHTML = '';
+        }
     });
 });
 </script>
 
 <style>
-.tile-container {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 10px;
+.suggestions-container {
+    position: relative;
+    z-index: 1000;
 }
 
 .tile {
-    padding: 10px 15px;
-    background-color: #e0f7fa;
-    border: 1px solid #006064;
-    border-radius: 5px;
+    padding: 8px 12px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .tile:hover {
-    background-color: #b2ebf2;
+    background-color: #f3f4f6;
 }
 
-.autocomplete-input {
-    width: 100%; /* Adjust width as needed */
-    max-width: 500px; /* Set a max width */
-    padding: 10px;
-    border: 1px solid #ddd;
-    border-radius: 5px;
+.tile:last-child {
+    border-bottom: none;
+}
+.characteristic-input-row {
+    align-items: end;
 }
 
-.autocomplete-input::placeholder {
-    color: #aaa;
+#added-characteristics {
+    min-height: 60px;
 }
 
-.hidden {
-    display: none;
+#char-list:empty::after {
+    content: "No characteristics added yet.";
+    color: #6b7280;
+    font-style: italic;
 }
 </style>
-
 {% endblock %}

@@ -3,7 +3,7 @@ from django.views.generic import ListView, DetailView
 from django.contrib import messages
 
 from farm.models import SeedLot
-from seeplahar.views import GenericDeleteView, GenericCreateView, GenericListView, GenericDetailView
+from seeplahar.views import GenericDeleteView, GenericCreateView, GenericListView, GenericDetailView, GenericUpdateView
 from .models import Taxon, Variety, Characteristic, CharacteristicValue
 from .forms import VarietyForm, TaxonForm, CharacteristicForm, CharacteristicFormSet, CharacteristicValueForm
 from django.views.generic.edit import CreateView
@@ -12,6 +12,8 @@ from django.forms import modelformset_factory
 from django.http import JsonResponse
 from autocomplete import HTMXAutoComplete
 from django.forms import inlineformset_factory
+from users.customer_context import get_current_customer
+
 
 def add_characteristic_form(request):
     if request.method == 'POST':
@@ -67,16 +69,25 @@ class CharacteristicValueAutoComplete(HTMXAutoComplete):
 
     def get(self, request, *args, **kwargs):
         term = request.GET.get('term', '')
-        characteristic_name = request.GET.get('characteristic_name', '')
-        if term and characteristic_name:
-            suggestions = CharacteristicValue.objects.filter(
-                value__icontains=term,
-                characteristic__name=characteristic_name,
-                characteristic__customer=request.user.customer
-            ).values('value').distinct()
-            return render(request, 'taxon/autocomplete_suggestions.html', {'suggestions': list(suggestions)})
-        return render(request, 'taxon/autocomplete_suggestions.html', {'suggestions': []})
+        char_name = request.GET.get('char-name', '')  # Note: 'char-name' not 'characteristic_name'
+        print(f"DEBUG: term='{term}', char_name='{char_name}'")  # Add this line
+        customer = get_current_customer()
 
+        if char_name:
+            try:
+                characteristic = Characteristic.objects.get(name=char_name, customer=customer)
+                values = CharacteristicValue.objects.filter(characteristic=characteristic)
+                if term:
+                    values = values.filter(value__icontains=term)
+                # Get unique values only
+                unique_values = values.values_list('value', flat=True).distinct()
+                suggestions = [{'name': char_name, 'value': value} for value in unique_values]
+            except Characteristic.DoesNotExist:
+                suggestions = []
+        else:
+            suggestions = []
+
+        return render(request, 'taxon/autocomplete_suggestions.html', {'suggestions': suggestions})
 
 def test_autocomplete(request):
     return render(request, 'taxon/test_autocomplete.html')
@@ -145,43 +156,74 @@ class VarietyCreateView(GenericCreateView):
     template_name = 'taxon/variety_form.html'
     success_url = reverse_lazy('dashboard')
 
+    def form_valid(self, form):
+        # Save the variety first
+        form.instance.customer = get_current_customer()
+        self.object = form.save()
+
+        # Process characteristics from JavaScript-generated fields
+        i = 0
+        while f'characteristic_{i}_name' in self.request.POST:
+            char_name = self.request.POST[f'characteristic_{i}_name']
+            char_value = self.request.POST[f'characteristic_{i}_value']
+
+            if char_name and char_value:
+                # Get or create the characteristic
+                characteristic, _ = Characteristic.objects.get_or_create(
+                    name=char_name,
+                    customer=get_current_customer()
+                )
+
+                # Create the characteristic value
+                CharacteristicValue.objects.create(
+                    characteristic=characteristic,
+                    value=char_value,
+                    variety=self.object
+                )
+            i += 1
+
+        return super().form_valid(form)
+
+
+class VarietyUpdateView(GenericUpdateView):
+    model = Variety
+    form_class = VarietyForm
+    template_name = 'taxon/variety_form.html'  # Can use the same template
+    success_url = reverse_lazy('dashboard')
+
     def get_context_data(self, **kwargs):
-        data = super().get_context_data(**kwargs)
-        CharacteristicValueFormSet = inlineformset_factory(
-            Variety,
-            CharacteristicValue,
-            form=CharacteristicValueForm,
-            extra=1,
-            can_delete=True
-        )
-        if self.request.POST:
-            data['characteristic_value_formset'] = CharacteristicValueFormSet(self.request.POST, instance=self.object)
-        else:
-            data['characteristic_value_formset'] = CharacteristicValueFormSet(instance=self.object)
-        return data
+        context = super().get_context_data(**kwargs)
+        # Add existing characteristics to context for display
+        context['existing_characteristics'] = CharacteristicValue.objects.filter(variety=self.object)
+        return context
 
     def form_valid(self, form):
-        context = self.get_context_data()
-        characteristic_value_formset = context['characteristic_value_formset']
-        print(f"Main form valid: {form.is_valid()}")
-        print(f"Main form errors: {form.errors}")
-        print(f"Formset valid: {characteristic_value_formset.is_valid()}")
-        print(f"Formset errors: {characteristic_value_formset.errors}")
-        print(f"Formset non-form errors: {characteristic_value_formset.non_form_errors()}")
-        print(f"Formset management form data: {characteristic_value_formset.management_form.cleaned_data}")
+        # Save the variety first
+        self.object = form.save()
 
-        if form.is_valid() and characteristic_value_formset.is_valid():
-            self.object = form.save()
-            characteristic_value_formset.instance = self.object
-            characteristic_value_formset.save()
-            return super().form_valid(form)
-        else:
-            return self.form_invalid(form)
+        # Clear existing characteristics for this variety
+        CharacteristicValue.objects.filter(variety=self.object).delete()
 
+        # Process new characteristics from JavaScript-generated fields
+        i = 0
+        while f'characteristic_{i}_name' in self.request.POST:
+            char_name = self.request.POST[f'characteristic_{i}_name']
+            char_value = self.request.POST[f'characteristic_{i}_value']
 
-    def form_invalid(self, form):
-        print(f"Form invalid. Errors: {form.errors}")
-        return super().form_invalid(form)
+            if char_name and char_value:
+                characteristic, _ = Characteristic.objects.get_or_create(
+                    name=char_name,
+                    customer=get_current_customer()
+                )
+
+                CharacteristicValue.objects.create(
+                    characteristic=characteristic,
+                    value=char_value,
+                    variety=self.object
+                )
+            i += 1
+
+        return super().form_valid(form)
 
 
 class TaxonDeleteView(GenericDeleteView):

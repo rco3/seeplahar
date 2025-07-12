@@ -20,7 +20,7 @@ from django.contrib import admin
 from django.urls import path, include
 from django.contrib.auth import views as auth_views
 from .views.specific import (
-    HomePageView, custom_logout, CustomLoginView, DashboardView
+    HomePageView, custom_logout, CustomLoginView, DashboardView, UniversalDetailView
 )
 from .views.generic import (
     GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
@@ -37,7 +37,7 @@ urlpatterns = [
     path('shop/', include('shop.urls', namespace='shop')),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),
-    path('<uuid:pk>/', GenericDetailView.as_view(), name='generic-detail'),
+    path('<uuid:pk>/', UniversalDetailView.as_view(), name='universal-detail'),
     path('users/', include('users.urls', namespace='users')),
     path('dashboard/', DashboardView.as_view(), name='dashboard'),
     *HTMXAutoComplete.url_dispatcher('ac'),
