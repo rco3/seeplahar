@@ -35,6 +35,7 @@ urlpatterns = [
     path('taxon/', include('taxon.urls', namespace='taxon')),
     path('farm/', include('farm.urls', namespace='farm')),
     path('shop/', include('shop.urls', namespace='shop')),
+    path('labels/', include('labels.urls', namespace='labels')),
     path('login/', CustomLoginView.as_view(), name='login'),
     path('logout/', custom_logout, name='logout'),
     path('<uuid:pk>/', UniversalDetailView.as_view(), name='universal-detail'),

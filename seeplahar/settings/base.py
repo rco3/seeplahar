@@ -89,6 +89,7 @@ INSTALLED_APPS = [
     'farm',
     'shop',
     'media',
+    'labels',
     'seeplahar',
     'django.contrib.admin',
     'django.contrib.auth',

@@ -86,14 +86,15 @@ class EventUpdateView(GenericUpdateView):
         kwargs['request'] = self.request
         return kwargs
 
+#
+# class GenerateQRCodeView(View):
+#     def get(self, request, pk):
+#         qr_url = f"{request.scheme}://{request.get_host()}/{pk}/"
+#         qr = qrcode.make(qr_url)
+#         response = HttpResponse(content_type="image/png")
+#         qr.save(response, "PNG")
+#         return response
 
-class GenerateQRCodeView(View):
-    def get(self, request, pk):
-        qr_url = f"{request.scheme}://{request.get_host()}/{pk}/"
-        qr = qrcode.make(qr_url)
-        response = HttpResponse(content_type="image/png")
-        qr.save(response, "PNG")
-        return response
 
 class IntakeView(TemplateView):
     template_name = "farm/intake.html"
