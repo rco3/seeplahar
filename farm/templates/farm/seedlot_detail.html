@@ -25,6 +25,7 @@
 
     <div class="mt-4">
         <a href="{% url 'farm:seedlot_list' %}" class="text-blue-600 hover:underline">Back to Seed Lots</a>
+        <a href="{% url 'labels:print_label' 'farm' 'seedlot' object.pk %}" class="ml-4 bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Print Label</a>
     </div>
 </div>
 {% endblock %}

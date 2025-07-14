@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
-{% block title %}Add Variety{% endblock %}
+{% block title %}{% if object %}Edit{% else %}Add{% endif %} Variety{% endblock %}
 
 {% block content %}
-<h1 class="text-3xl font-bold">Add New Variety</h1>
+<h1 class="text-3xl font-bold">{% if object %}Edit{% else %}Add New{% endif %} Variety</h1>
 
 <form method="post" class="space-y-6">
     {% csrf_token %}
@@ -94,6 +94,47 @@
 document.addEventListener('DOMContentLoaded', function() {
     let charCounter = 0;
 
+    // Pre-load existing characteristics if editing
+    {% if object %}
+        {% for char_value in object.characteristicvalue_set.all %}
+            addCharacteristic('{{ char_value.characteristic.name|escapejs }}', '{{ char_value.value|escapejs }}');
+        {% endfor %}
+    {% endif %}
+
+    function addCharacteristic(charName, charValue) {
+        // Create visual representation
+        const charDiv = document.createElement('div');
+        // In the addCharacteristic function, change this part:charDiv.className = 'flex items-center bg-blue-50 border border-blue-200 rounded p-2 max-w-md';
+        charDiv.innerHTML = `
+            <button type="button"
+                    class="remove-char text-red-600 hover:text-red-800 mr-3 font-bold"
+                    data-index="${charCounter}">
+                ✕
+            </button>
+            <span class="text-blue-800 font-medium flex-1">${charName}: ${charValue}</span>
+        `;
+
+        // Create hidden form fields
+        const nameField = document.createElement('input');
+        nameField.type = 'hidden';
+        nameField.name = `characteristic_${charCounter}_name`;
+        nameField.value = charName;
+        nameField.setAttribute('data-index', charCounter);
+
+        const valueField = document.createElement('input');
+        valueField.type = 'hidden';
+        valueField.name = `characteristic_${charCounter}_value`;
+        valueField.value = charValue;
+        valueField.setAttribute('data-index', charCounter);
+
+        // Add to DOM
+        document.getElementById('char-list').appendChild(charDiv);
+        document.getElementById('hidden-characteristics').appendChild(nameField);
+        document.getElementById('hidden-characteristics').appendChild(valueField);
+
+        charCounter++;
+    }
+
     // Handle characteristic name suggestion clicks
     document.addEventListener('click', function(e) {
         if (e.target.classList.contains('tile') && e.target.closest('#char-name-suggestions')) {
@@ -124,43 +165,13 @@ document.addEventListener('DOMContentLoaded', function() {
         const charValue = document.getElementById('char-value').value.trim();
 
         if (charName && charValue) {
-            // Create visual representation
-            const charDiv = document.createElement('div');
-            charDiv.className = 'flex items-center justify-between bg-blue-50 border border-blue-200 rounded p-2';
-            charDiv.innerHTML = `
-                <span class="text-blue-800 font-medium">${charName}: ${charValue}</span>
-                <button type="button"
-                        class="remove-char text-red-500 hover:text-red-700 ml-2"
-                        data-index="${charCounter}">
-                    ✕
-                </button>
-            `;
-
-            // Create hidden form fields
-            const nameField = document.createElement('input');
-            nameField.type = 'hidden';
-            nameField.name = `characteristic_${charCounter}_name`;
-            nameField.value = charName;
-            nameField.setAttribute('data-index', charCounter);
-
-            const valueField = document.createElement('input');
-            valueField.type = 'hidden';
-            valueField.name = `characteristic_${charCounter}_value`;
-            valueField.value = charValue;
-            valueField.setAttribute('data-index', charCounter);
-
-            // Add to DOM
-            document.getElementById('char-list').appendChild(charDiv);
-            document.getElementById('hidden-characteristics').appendChild(nameField);
-            document.getElementById('hidden-characteristics').appendChild(valueField);
+            addCharacteristic(charName, charValue);
 
             // Clear input fields
             document.getElementById('char-name').value = '';
             document.getElementById('char-value').value = '';
             document.getElementById('char-name-suggestions').innerHTML = '';
             document.getElementById('char-value-suggestions').innerHTML = '';
-
-            charCounter++;
         } else {
             alert('Please enter both a characteristic name and value.');
         }

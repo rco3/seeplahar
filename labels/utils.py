@@ -6,7 +6,17 @@ import base64
 def generate_qr_code(uuid, request, format='PNG', size=None):
     """Generate QR code for entity UUID - uses same URL building as old GenerateQRCodeView"""
     qr_url = f"{request.scheme}://{request.get_host()}/{uuid}/"
-    qr = qrcode.make(qr_url)
+
+    # Create QR code with no border
+    qr_code = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_L,
+        box_size=10,
+        border=0,  # Remove the quiet zone
+    )
+    qr_code.add_data(qr_url)
+    qr_code.make(fit=True)
+    qr = qr_code.make_image(fill_color="black", back_color="white")
 
     if size:
         qr = qr.resize(size)
@@ -43,36 +53,55 @@ def generate_label_svg(entity_type, entity, request):
 
 
 def seedlot_label_template(seedlot, qr_base64):
-    """30256 label template for SeedLot"""
-    return f'''<svg width="288" height="167" viewBox="0 0 288 167" xmlns="http://www.w3.org/2000/svg">
-  <rect x="0" y="0" width="288" height="167" fill="white"/>
+    """30256 label - 1106x624 usable area with characteristics and smaller QR"""
 
-  <text x="12" y="30" font-family="Arial, sans-serif" font-size="22" font-weight="bold" fill="black">
+    # Get variety characteristics
+    characteristics = []
+    for char_value in seedlot.variety.characteristicvalue_set.all():
+        characteristics.append(f"{char_value.characteristic.name}: {char_value.value}")
+
+    # Build characteristics text elements
+    char_lines = ""
+    for i, char in enumerate(characteristics[:8]):  # Max 8 lines to fit
+        y_pos = 280 + (i * 40)
+        if y_pos < 570:  # Don't run into bottom
+            char_lines += f'<text x="8" y="{y_pos}" font-family="Arial, sans-serif" font-size="36" fill="black">{char}</text>\n  '
+
+    return f'''<svg width="1106" height="624" viewBox="0 0 1106 624" xmlns="http://www.w3.org/2000/svg">
+
+  <!-- Variety name -->
+  <text x="8" y="90" font-family="Arial, sans-serif" font-size="100" font-weight="bold" fill="black">
     {seedlot.variety.name}
   </text>
 
-  <rect x="10" y="38" width="268" height="23" fill="black" rx="2"/>
-  <text x="144" y="57" font-family="Arial, sans-serif" font-size="20" font-weight="bold" fill="white" text-anchor="middle">
+  <!-- Taxon bar - FULL usable width -->
+  <rect x="0" y="105" width="1106" height="85" fill="black"/>
+  <text x="553" y="171" font-family="Arial, sans-serif" font-size="75" font-weight="bold" fill="white" text-anchor="middle">
     {seedlot.variety.taxon.name}
   </text>
 
-  <text x="170" y="77" font-family="Arial, sans-serif" font-size="12" fill="black" font-style="italic" text-anchor="end">
+  <!-- Species -->
+  <text x="553" y="230" font-family="Arial, sans-serif" font-size="45" fill="black" font-style="italic" text-anchor="middle">
     {seedlot.variety.taxon.species_name}
   </text>
 
-  <text x="170" y="93" font-family="Arial, sans-serif" font-size="11" fill="black" text-anchor="end">
+  <!-- Variety characteristics - left side -->
+  {char_lines}
+
+  <!-- SeedLot details - right side, right justified -->
+  <text x="1098" y="280" font-family="Arial, sans-serif" font-size="42" fill="black" text-anchor="end">
     Source: {seedlot.origin or "Unknown"}
   </text>
-  <text x="170" y="106" font-family="Arial, sans-serif" font-size="11" fill="black" text-anchor="end">
+  <text x="1098" y="325" font-family="Arial, sans-serif" font-size="42" fill="black" text-anchor="end">
     Received: {seedlot.date_received or "Unknown"}
   </text>
-  <text x="170" y="119" font-family="Arial, sans-serif" font-size="11" fill="black" text-anchor="end">
+  <text x="1098" y="370" font-family="Arial, sans-serif" font-size="42" fill="black" text-anchor="end">
     Quantity: {seedlot.quantity or ""} {seedlot.units or ""}
   </text>
 
-  <image x="188" y="67" width="90" height="90" href="data:image/png;base64,{qr_base64}"/>
+  <!-- QR code - smaller, bottom right -->
+  <image x="866" y="381" width="240" height="243" href="data:image/png;base64,{qr_base64}"/>
 </svg>'''
-
 
 # Placeholder templates - we'll fill these in as needed
 def planting_label_template(planting, qr_base64):

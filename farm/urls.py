@@ -1,7 +1,7 @@
 from django.urls import path
 from seeplahar.views.generic import GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
 from .models import SeedLot, Planting, Harvest, SeedlingBatch, Event
-from .views import GenerateQRCodeView, IntakeView, EventCreateView, EventUpdateView
+from .views import IntakeView, EventCreateView, EventUpdateView
 
 app_name = 'farm'
 
@@ -47,6 +47,5 @@ urlpatterns = [
     path('events/<uuid:pk>/delete/', GenericDeleteView.as_view(model=Event), name='event_delete'),
 
     # Special views
-    path('generate_qr/<uuid:pk>/', GenerateQRCodeView.as_view(), name='generate_qr'),
     path('intake/', IntakeView.as_view(), name='intake'),
 ]

@@ -87,10 +87,10 @@ class UniversalDetailView(View):
         # Define all models to search, in order of priority
         models_to_check = [
             # Farm operations (most commonly scanned)
-            (SeedLot, 'farm', 'seedlot'),
-            (Planting, 'farm', 'planting'),
-            (Harvest, 'farm', 'harvest'),
-            (SeedlingBatch, 'farm', 'seedlingbatch'),
+            (SeedLot, 'farm', 'seedlots'),        # seedlot -> seedlots
+            (Planting, 'farm', 'plantings'),      # planting -> plantings (if needed)
+            (Harvest, 'farm', 'harvests'),        # harvest -> harvests (if needed)
+            (SeedlingBatch, 'farm', 'seedlingbatches'),  # etc
 
             # Taxonomy (less frequently scanned directly)
             (Variety, 'taxon', 'variety'),
