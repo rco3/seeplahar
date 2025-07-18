@@ -36,6 +36,14 @@ class SeedLot(CustomerAwareModel):
     def __str__(self):
         return self.name
 
+    def current_status(self):
+        """Get the most recent event for this seedlot"""
+        latest_event = Event.objects.filter(
+            content_type=ContentType.objects.get_for_model(self),
+            object_id=self.id
+        ).order_by('-date').first()
+        return latest_event.type if latest_event else 'received'
+
 
 class Planting(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -82,22 +90,45 @@ class Harvest(CustomerAwareModel):
         return f'Harvest on {self.date}'
 
 
+# farm/models.py - Updated SeedlingBatch model
+
+# farm/models.py - Updated SeedlingBatch model
+
 class SeedlingBatch(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    seed_lot = models.ForeignKey(SeedLot, on_delete=models.CASCADE, related_name='seedling_batches')
+    variety = models.ForeignKey('taxon.Variety', null=True, blank=True, on_delete=models.SET_NULL)
     date = models.DateField(default=datetime.now)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)  # Updated to DecimalField
+    quantity = models.DecimalField(max_digits=10, decimal_places=2)
     units = models.CharField(max_length=50, default='seeds')
     location = models.CharField(max_length=100, null=True, blank=True)
-    status = models.CharField(max_length=50, choices=[('germinating', 'Germinating'), ('transplanted', 'Transplanted'), ('failed', 'Failed')], default=('germinating', 'Germinating'))
-    parent_batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='child_batches')
-    source = models.ForeignKey('SeedLot', null=True, blank=True, on_delete=models.SET_NULL)
-    variety = models.ForeignKey('taxon.Variety', null=True, blank=True, on_delete=models.SET_NULL)
-    photos = models.ManyToManyField(Photo, blank=True, related_name='seedlingBatches')
+    parent_batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
+                                     related_name='child_batches')
 
+    # Standardized source pattern
+    vendor = models.CharField(max_length=100, null=True, blank=True)
+    source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='sourced_seedling_batches')
+    source_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True,
+                                            limit_choices_to=models.Q(app_label='farm',
+                                                                      model__in=['seedlot', 'planting',
+                                                                                 'seedlingbatch']))
+    source_object_id = models.UUIDField(null=True, blank=True)
+    source = GenericForeignKey('source_content_type', 'source_object_id')
+
+    photos = models.ManyToManyField(Photo, blank=True, related_name='seedling_batches')
 
     def __str__(self):
-        return f'{self.seed_lot.name} batch sown on {self.date}'
+        if self.variety:
+            return f'{self.variety.name} batch sown on {self.date}'
+        return f'SeedlingBatch sown on {self.date}'
+
+    def current_status(self):
+        """Get the most recent event for this seedling batch"""
+        latest_event = Event.objects.filter(
+            content_type=ContentType.objects.get_for_model(self),
+            object_id=self.id
+        ).order_by('-date').first()
+        return latest_event.type if latest_event else 'sown'
 
 
 class Event(CustomerAwareModel):

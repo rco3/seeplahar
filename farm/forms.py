@@ -23,18 +23,13 @@ class SeedLotForm(forms.ModelForm):
 # Update the existing SeedlingBatchForm class in farm/forms.py
 
 
+# Update the existing SeedlingBatchForm class in farm/forms.py
+
 class SeedlingBatchForm(forms.ModelForm):
     class Meta:
         model = SeedlingBatch
-        fields = ['seed_lot',
-                  'date',
-                  'quantity',
-                  'units',
-                  'location',
-                  'status',
-                  'parent_batch',
-                  'source',
-                  'variety']
+        fields = ['variety', 'date', 'quantity', 'units', 'location', 'parent_batch', 'vendor', 'source_partner',
+                  'source_content_type', 'source_object_id']
 
     def __init__(self, *args, **kwargs):
         seedlot_id = kwargs.pop('seedlot_id', None)
@@ -46,21 +41,25 @@ class SeedlingBatchForm(forms.ModelForm):
                 seedlot = SeedLot.objects.get(pk=seedlot_id)
                 variety = seedlot.variety
 
-                # Filter querysets to only show relevant options
-                self.fields['seed_lot'].queryset = SeedLot.objects.filter(
-                    variety=variety)
-                if 'source' in self.fields:
-                    self.fields['source'].queryset = SeedLot.objects.filter(
-                        variety=variety)
+                # Pre-populate fields from the seedlot
+                self.fields['variety'].initial = variety
+                self.fields['source_content_type'].initial = ContentType.objects.get_for_model(SeedLot)
+                self.fields['source_object_id'].initial = seedlot_id
+                self.fields['source_partner'].initial = seedlot.source_partner
+                self.fields['vendor'].initial = seedlot.vendor
 
-                # Coming from SeedLot detail page - make seed_lot readonly
-                self.fields['seed_lot'].widget.attrs['readonly'] = True
-                self.fields['seed_lot'].widget.attrs['class'] = 'readonly-field bg-gray-100'
+                # Hide variety field since it's determined by seedlot
+                self.fields['variety'].widget = forms.HiddenInput()
 
-                # Also make variety readonly since it's derived from seed_lot
-                if 'variety' in self.fields:
-                    self.fields['variety'].widget.attrs['readonly'] = True
-                    self.fields['variety'].widget.attrs['class'] = 'readonly-field bg-gray-100'
+                # Hide the GenericFK fields - they're set automatically
+                self.fields['source_content_type'].widget = forms.HiddenInput()
+                self.fields['source_object_id'].widget = forms.HiddenInput()
+
+                # Make source_partner and vendor readonly (inherited from seedlot)
+                self.fields['source_partner'].widget.attrs['readonly'] = True
+                self.fields['source_partner'].widget.attrs['class'] = 'readonly-field bg-gray-100'
+                self.fields['vendor'].widget.attrs['readonly'] = True
+                self.fields['vendor'].widget.attrs['class'] = 'readonly-field bg-gray-100'
 
             except SeedLot.DoesNotExist:
                 pass  # Handle gracefully if seedlot not found
