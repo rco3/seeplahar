@@ -11,3 +11,6 @@ djangorestframework
 djangorestframework-jwt
 django-htmx-autocomplete
 pillow
+reportlab
+svglib
+weasyprint

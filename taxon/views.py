@@ -15,6 +15,7 @@ from django.forms import inlineformset_factory
 from users.customer_context import get_current_customer
 
 
+
 def add_characteristic_form(request):
     if request.method == 'POST':
         form = CharacteristicForm(request.POST)

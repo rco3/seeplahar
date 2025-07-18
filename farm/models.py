@@ -9,19 +9,29 @@ from django.contrib.contenttypes.models import ContentType
 
 # farm/models.py
 
+
 class SeedLot(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     variety = models.ForeignKey('taxon.Variety', on_delete=models.CASCADE, related_name='seed_lots')
     name = models.CharField(max_length=100, default='New Seedlot')
-    quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)  # Updated to DecimalField
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
     units = models.CharField(max_length=50, null=True, blank=True)
     date_received = models.DateField(null=True, blank=True, default=datetime.now)
-    origin = models.CharField(max_length=100, null=True, blank=True)
+    vendor = models.CharField(max_length=100, null=True, blank=True)  # Changed from 'origin'
     description = models.TextField(blank=True, null=True)
-    source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True, related_name='sourced_seedlots')
-    source = models.ForeignKey('Harvest', null=True, blank=True, on_delete=models.SET_NULL)
-    photos = models.ManyToManyField(Photo, blank=True, related_name='seed_lots')
 
+    # Commercial source (who's responsible for quality)
+    source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True,
+                                       related_name='sourced_seedlots')
+
+    # Biological source (what it came from) - GenericFK
+    source_content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE, null=True, blank=True,
+                                            limit_choices_to=models.Q(app_label='farm',
+                                                                      model__in=['harvest', 'planting', 'seedlot']))
+    source_object_id = models.UUIDField(null=True, blank=True)
+    source = GenericForeignKey('source_content_type', 'source_object_id')
+
+    photos = models.ManyToManyField(Photo, blank=True, related_name='seed_lots')
 
     def __str__(self):
         return self.name

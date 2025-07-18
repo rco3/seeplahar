@@ -2,6 +2,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.views import View
 from django.http import HttpResponse
 import qrcode
+from django.shortcuts import get_object_or_404
 from django.views.generic import TemplateView
 from seeplahar.views.base import BaseCreateView
 from seeplahar.views.generic import GenericCreateView, GenericUpdateView
@@ -27,6 +28,7 @@ class FarmCreateView(BaseCreateView):
             form.instance.location = location
         return super().form_valid(form)
 
+
 class PlantingCreateView(FarmCreateView, GenericCreateView):
     model = Planting
     form_class = PlantingForm
@@ -47,17 +49,38 @@ class PlantingCreateView(FarmCreateView, GenericCreateView):
         ]
         return choices
 
+
 class SeedLotCreateView(FarmCreateView, GenericCreateView):
     model = SeedLot
     form_class = SeedLotForm
     success_url = reverse_lazy('farm:seedlot_list')
     template_name = 'farm/seedlot_form.html'
 
+
 class SeedlingBatchCreateView(FarmCreateView, GenericCreateView):
     model = SeedlingBatch
     form_class = SeedlingBatchForm
     success_url = reverse_lazy('farm:seedlingbatch_list')
     template_name = 'farm/seedlingbatch_form.html'
+
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        seedlot_id = self.request.GET.get('seedlot')
+        if seedlot_id:
+            kwargs['seedlot_id'] = seedlot_id
+            # Pre-populate the instance if creating from seedlot
+            if not kwargs.get('instance'):
+                seedlot = get_object_or_404(SeedLot, pk=seedlot_id, customer=self.request.user.customer)
+                kwargs['initial'] = kwargs.get('initial', {})
+                kwargs['initial']['seed_lot'] = seedlot
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        seedlot_id = self.request.GET.get('seedlot')
+        if seedlot_id:
+            context['seedlot'] = get_object_or_404(SeedLot, pk=seedlot_id, customer=self.request.user.customer)
+        return context
 
 
 class EventCreateView(GenericCreateView):
@@ -74,6 +97,7 @@ class EventCreateView(GenericCreateView):
     def form_valid(self, form):
         form.instance.customer = self.request.user.customer
         return super().form_valid(form)
+
 
 class EventUpdateView(GenericUpdateView):
     model = Event

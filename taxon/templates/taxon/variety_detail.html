@@ -30,7 +30,7 @@
                         {% for seed_lot in object.seed_lots.all %}
                             <li class="text-primary">
                                 <a href="{% url 'farm:seedlot_detail' pk=seed_lot.id %}" class="hover:underline">
-                                    {{ seed_lot.origin }} ({{ seed_lot.quantity }} {{ seed_lot.units }}, received {{ seed_lot.date_received|date:"Y-m-d" }})
+                                    {{ seed_lot.vendor }} ({{ seed_lot.quantity }} {{ seed_lot.units }}, received {{ seed_lot.date_received|date:"Y-m-d" }})
                                 </a>
                             </li>
                         {% empty %}

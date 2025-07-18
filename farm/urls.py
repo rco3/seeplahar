@@ -1,7 +1,7 @@
 from django.urls import path
 from seeplahar.views.generic import GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
 from .models import SeedLot, Planting, Harvest, SeedlingBatch, Event
-from .views import IntakeView, EventCreateView, EventUpdateView
+from .views import IntakeView, EventCreateView, EventUpdateView, SeedlingBatchCreateView
 
 app_name = 'farm'
 
@@ -14,7 +14,8 @@ urlpatterns = [
     path('seedlots/<uuid:pk>/', GenericDetailView.as_view(
         model=SeedLot,
         template_name='farm/seedlot_detail.html'
-    ), name='seedlot_detail'),    path('seedlots/add/', GenericCreateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_create'),
+    ), name='seedlot_detail'),
+    path('seedlots/add/', GenericCreateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_create'),
     path('seedlots/<uuid:pk>/update/', GenericUpdateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_update'),
     path('seedlots/<uuid:pk>/delete/', GenericDeleteView.as_view(model=SeedLot), name='seedlot_delete'),
 
@@ -32,10 +33,10 @@ urlpatterns = [
     path('harvests/<uuid:pk>/update/', GenericUpdateView.as_view(model=Harvest, fields=['plants', 'date', 'quantity', 'units', 'description', 'source_partner']), name='harvest_update'),
     path('harvests/<uuid:pk>/delete/', GenericDeleteView.as_view(model=Harvest), name='harvest_delete'),
 
-    # SeedlingBatch URLs
+    # SeedlingBatch URLs - Updated to use existing custom view
     path('seedlingbatches/', GenericListView.as_view(model=SeedlingBatch), name='seedlingbatch_list'),
     path('seedlingbatches/<uuid:pk>/', GenericDetailView.as_view(model=SeedlingBatch), name='seedlingbatch_detail'),
-    path('seedlingbatches/add/', GenericCreateView.as_view(model=SeedlingBatch, fields=['seed_lot', 'date', 'quantity', 'units', 'location', 'status', 'parent_batch', 'source', 'variety']), name='seedlingbatch_create'),
+    path('seedlingbatches/add/', SeedlingBatchCreateView.as_view(), name='seedlingbatch_create'),
     path('seedlingbatches/<uuid:pk>/update/', GenericUpdateView.as_view(model=SeedlingBatch, fields=['seed_lot', 'date', 'quantity', 'units', 'location', 'status', 'parent_batch', 'source', 'variety']), name='seedlingbatch_update'),
     path('seedlingbatches/<uuid:pk>/delete/', GenericDeleteView.as_view(model=SeedlingBatch), name='seedlingbatch_delete'),
 

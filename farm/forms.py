@@ -9,12 +9,61 @@ from .models import SeedLot, SeedlingBatch, Planting, Harvest, Location, Event
 class SeedLotForm(forms.ModelForm):
     class Meta:
         model = SeedLot
-        fields = ['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']
+        fields = ['variety',
+                  'name',
+                  'quantity',
+                  'units',
+                  'date_received',
+                  'vendor',
+                  'description',
+                  'source_partner',
+                  'source_content_type',
+                  'source_object_id']
+
+# Update the existing SeedlingBatchForm class in farm/forms.py
+
 
 class SeedlingBatchForm(forms.ModelForm):
     class Meta:
         model = SeedlingBatch
-        fields = ['seed_lot', 'date', 'quantity', 'units', 'location', 'status', 'parent_batch', 'source', 'variety']
+        fields = ['seed_lot',
+                  'date',
+                  'quantity',
+                  'units',
+                  'location',
+                  'status',
+                  'parent_batch',
+                  'source',
+                  'variety']
+
+    def __init__(self, *args, **kwargs):
+        seedlot_id = kwargs.pop('seedlot_id', None)
+        super().__init__(*args, **kwargs)
+
+        if seedlot_id:
+            # Get the specific seedlot and its variety
+            try:
+                seedlot = SeedLot.objects.get(pk=seedlot_id)
+                variety = seedlot.variety
+
+                # Filter querysets to only show relevant options
+                self.fields['seed_lot'].queryset = SeedLot.objects.filter(
+                    variety=variety)
+                if 'source' in self.fields:
+                    self.fields['source'].queryset = SeedLot.objects.filter(
+                        variety=variety)
+
+                # Coming from SeedLot detail page - make seed_lot readonly
+                self.fields['seed_lot'].widget.attrs['readonly'] = True
+                self.fields['seed_lot'].widget.attrs['class'] = 'readonly-field bg-gray-100'
+
+                # Also make variety readonly since it's derived from seed_lot
+                if 'variety' in self.fields:
+                    self.fields['variety'].widget.attrs['readonly'] = True
+                    self.fields['variety'].widget.attrs['class'] = 'readonly-field bg-gray-100'
+
+            except SeedLot.DoesNotExist:
+                pass  # Handle gracefully if seedlot not found
 
 
 class PlantingForm(forms.ModelForm):
