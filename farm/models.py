@@ -1,5 +1,7 @@
 from django.db import models
 import uuid
+
+from farm.utils.naming import generate_entity_name
 from users.models import Partner
 from users.models import CustomerAwareModel
 from datetime import datetime
@@ -44,6 +46,24 @@ class SeedLot(CustomerAwareModel):
         ).order_by('-date').first()
         return latest_event.type if latest_event else 'received'
 
+    def generate_name(self):
+        """Generate a proper seedlot name using variety and source"""
+        variety_name = self.variety.name if self.variety else 'Unknown'
+
+        if self.source_partner:
+            source_name = self.source_partner.name
+        elif self.vendor:
+            source_name = self.vendor
+        else:
+            source_name = 'Unknown'
+
+        return generate_entity_name(variety_name, source_name, SeedLot, self.customer)
+
+    def save(self, *args, **kwargs):
+        # Auto-generate name if it's the terrible default or empty
+        if not self.name or self.name == 'New Seedlot':
+            self.name = self.generate_name()
+        super().save(*args, **kwargs)
 
 class Planting(CustomerAwareModel):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -131,25 +151,11 @@ class SeedlingBatch(CustomerAwareModel):
         return latest_event.type if latest_event else 'sown'
 
 
+# farm/models.py - Updated Event model
+
 class Event(CustomerAwareModel):
-    EVENT_TYPES = [
-        ('collection', 'Collection'),
-        ('fermentation_start', 'Fermentation Start'),
-        ('fermentation_end', 'Fermentation End'),
-        ('storage', 'Storage'),
-        ('planting', 'Planting'),
-        ('germination', 'Germination'),
-        ('first_true_leaves', 'First True Leaves'),
-        ('transplant', 'Transplant'),
-        ('watering', 'Watering'),
-        ('fertilizing', 'Fertilizing'),
-        ('pruning', 'Pruning'),
-        ('treatment', 'Treatment'),
-        ('packaging', 'Packaging'),
-        ('sale', 'Sale'),
-    ]
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    type = models.CharField(max_length=50, choices=EVENT_TYPES, default='collection')
+    type = models.CharField(max_length=50)  # Free text - no hard-coded choices!
     date = models.DateField(default=datetime.now)
     description = models.TextField(null=True, blank=True)
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)

@@ -56,6 +56,27 @@ class SeedLotCreateView(FarmCreateView, GenericCreateView):
     success_url = reverse_lazy('farm:seedlot_list')
     template_name = 'farm/seedlot_form.html'
 
+    def get_form_kwargs(self):
+        kwargs = super().get_form_kwargs()
+        variety_id = self.request.GET.get('variety')
+        if variety_id:
+            kwargs['variety_id'] = variety_id
+            # Pre-populate the instance if creating from variety
+            if not kwargs.get('instance'):
+                from taxon.models import Variety
+                variety = get_object_or_404(Variety, pk=variety_id, customer=self.request.user.customer)
+                kwargs['initial'] = kwargs.get('initial', {})
+                kwargs['initial']['variety'] = variety
+        return kwargs
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        variety_id = self.request.GET.get('variety')
+        if variety_id:
+            from taxon.models import Variety
+            context['variety'] = get_object_or_404(Variety, pk=variety_id, customer=self.request.user.customer)
+        return context
+
 
 class SeedlingBatchCreateView(FarmCreateView, GenericCreateView):
     model = SeedlingBatch

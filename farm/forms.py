@@ -20,7 +20,17 @@ class SeedLotForm(forms.ModelForm):
                   'source_content_type',
                   'source_object_id']
 
-# Update the existing SeedlingBatchForm class in farm/forms.py
+    def __init__(self, *args, **kwargs):
+        variety_id = kwargs.pop('variety_id', None)
+        super().__init__(*args, **kwargs)
+
+        if variety_id:
+            # Coming from Variety detail page - hide variety field
+            self.fields['variety'].widget = forms.HiddenInput()
+
+            # Hide GenericFK fields for now (external acquisition)
+            self.fields['source_content_type'].widget = forms.HiddenInput()
+            self.fields['source_object_id'].widget = forms.HiddenInput()
 
 
 # Update the existing SeedlingBatchForm class in farm/forms.py
@@ -92,23 +102,40 @@ class LocationForm(forms.ModelForm):
         fields = ['name', 'description', 'parent']
 
 
+# farm/forms.py - Updated EventForm
+
 class EventForm(forms.ModelForm):
-    RELATED_ITEM_CHOICES = [
-        ('planting', 'Planting'),
-        ('seedlot', 'SeedLot'),
-        ('seedlingbatch', 'SeedlingBatch'),
-        ('harvest', 'Harvest'),
-    ]
-    related_item_type = forms.ChoiceField(choices=RELATED_ITEM_CHOICES)
+    # Remove hard-coded choices - let the GenericFK be truly generic!
+    related_item_type = forms.CharField(max_length=50, help_text="e.g., 'planting', 'seedlot', 'harvest'")
     related_item_id = forms.UUIDField()
 
     class Meta:
         model = Event
         fields = ['type', 'date', 'description']
+        widgets = {
+            'type': forms.TextInput(attrs={
+                'list': 'event-types-datalist',
+                'placeholder': 'Enter event type...',
+                'autocomplete': 'off'
+            })
+        }
 
     def __init__(self, *args, **kwargs):
         self.request = kwargs.pop('request', None)
         super().__init__(*args, **kwargs)
+
+        # Add datalist options for autocomplete - both event types AND model types
+        if self.request and self.request.user.customer:
+            existing_types = Event.objects.filter(
+                customer=self.request.user.customer
+            ).values_list('type', flat=True).distinct().order_by('type')
+
+            existing_model_types = Event.objects.filter(
+                customer=self.request.user.customer
+            ).values_list('content_type__model', flat=True).distinct().order_by('content_type__model')
+
+            self.existing_event_types = list(existing_types)
+            self.existing_model_types = list(existing_model_types)
 
     def clean(self):
         cleaned_data = super().clean()
@@ -131,7 +158,8 @@ class EventForm(forms.ModelForm):
                     cleaned_data['content_type'] = ContentType.objects.get_for_model(model_class)
                     cleaned_data['object_id'] = related_item_id
                 except model_class.DoesNotExist:
-                    raise forms.ValidationError(f"{related_item_type.capitalize()} with id {related_item_id} does not exist.")
+                    raise forms.ValidationError(
+                        f"{related_item_type.capitalize()} with id {related_item_id} does not exist.")
             else:
                 raise forms.ValidationError("Invalid related item type.")
 

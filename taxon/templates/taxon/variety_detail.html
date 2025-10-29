@@ -25,7 +25,13 @@
             <div class="p-4">
                 <p class="text-primary-dark">{{ variety.description }}</p>
                 <div class="mt-4">
-                    <h2 class="text-2xl font-semibold text-primary-dark">Seed Lots</h2>
+                    <div class="flex items-center justify-between mb-2">
+                        <h2 class="text-2xl font-semibold text-primary-dark">Seed Lots</h2>
+                        <a href="{% url 'farm:seedlot_create' %}?variety={{ variety.pk }}"
+                           class="bg-green-500 text-white px-3 py-1 rounded hover:bg-green-600 text-sm">
+                           + CREATE SEEDLOT
+                        </a>
+                    </div>
                     <ul class="list-disc list-inside">
                         {% for seed_lot in object.seed_lots.all %}
                             <li class="text-primary">
@@ -34,7 +40,7 @@
                                 </a>
                             </li>
                         {% empty %}
-                            <li class="text-primary">No seed lots available.</li>
+                            <li class="text-gray-500 italic">No seed lots yet - create one above!</li>
                         {% endfor %}
                     </ul>
                 </div>

@@ -1,7 +1,7 @@
 from django.urls import path
 from seeplahar.views.generic import GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
 from .models import SeedLot, Planting, Harvest, SeedlingBatch, Event
-from .views import IntakeView, EventCreateView, EventUpdateView, SeedlingBatchCreateView
+from .views import IntakeView, EventCreateView, EventUpdateView, SeedlingBatchCreateView, SeedLotCreateView
 
 app_name = 'farm'
 
@@ -15,7 +15,7 @@ urlpatterns = [
         model=SeedLot,
         template_name='farm/seedlot_detail.html'
     ), name='seedlot_detail'),
-    path('seedlots/add/', GenericCreateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_create'),
+    path('seedlots/add/', SeedLotCreateView.as_view(), name='seedlot_create'),
     path('seedlots/<uuid:pk>/update/', GenericUpdateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_update'),
     path('seedlots/<uuid:pk>/delete/', GenericDeleteView.as_view(model=SeedLot), name='seedlot_delete'),
 
