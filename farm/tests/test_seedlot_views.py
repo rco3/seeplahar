@@ -1,5 +1,8 @@
 # farm/tests/test_seedlot_views.py
 from django.urls import reverse
+
+from users.customer_context import CustomerContext
+
 from .base import FarmBaseTestCase
 from ..models import SeedLot
 
@@ -9,7 +12,8 @@ class SeedLotViewsTestCase(FarmBaseTestCase):
         self.login_test_user()
         response = self.client.get(reverse('farm:seedlot_list'))
         self.assertEqual(response.status_code, 200)
-        self.assertContains(response, "Andorian Blue Pea Seeds Batch 1")
+        self.assertContains(response, self.variety.taxon.name)
+        self.assertContains(response, self.seedlot.vendor)
 
     def test_seedlot_detail_view(self):
         self.login_test_user()
@@ -24,6 +28,7 @@ class SeedLotViewsTestCase(FarmBaseTestCase):
             'name': 'New SeedLot',
             'quantity': 200,
             'units': 'grams',
+            'vendor': 'Federation Seeds'
         }
         response = self.client.post(reverse('farm:seedlot_create'), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
@@ -37,6 +42,7 @@ class SeedLotViewsTestCase(FarmBaseTestCase):
             'name': 'Updated SeedLot',
             'quantity': 150,
             'units': 'grams',
+            'vendor': 'Starfleet Seed Cooperative'
         }
         response = self.client.post(reverse('farm:seedlot_update', args=[self.seedlot.id]), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
@@ -52,19 +58,21 @@ class SeedLotViewsTestCase(FarmBaseTestCase):
 
     def test_customer_isolation(self):
         # Create a seedlot for the other customer
-        other_seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name="Klingon Seeds",
-            quantity=200,
-            units="grams",
-            customer=self.other_customer
-        )
+        with CustomerContext(self.other_customer):
+            other_seedlot = SeedLot.objects.create(
+                variety=self.variety,
+                name="Klingon Seeds",
+                quantity=200,
+                units="grams",
+                vendor="Kronos Agro",
+                customer=self.other_customer
+            )
 
         # Test list view isolation
         self.login_test_user()
         response = self.client.get(reverse('farm:seedlot_list'))
-        self.assertContains(response, "Andorian Blue Pea Seeds Batch 1")
-        self.assertNotContains(response, "Klingon Seeds")
+        self.assertContains(response, self.seedlot.vendor)
+        self.assertNotContains(response, "Kronos Agro")
 
         # Test can't access other customer's detail
         response = self.client.get(reverse('farm:seedlot_detail', args=[other_seedlot.id]))
@@ -80,7 +88,8 @@ class SeedLotViewsTestCase(FarmBaseTestCase):
         # Test can't delete other customer's seedlot
         response = self.client.post(reverse('farm:seedlot_delete', args=[other_seedlot.id]))
         self.assertEqual(response.status_code, 404)
-        self.assertTrue(SeedLot.objects.filter(id=other_seedlot.id).exists())
+        with CustomerContext(self.other_customer):
+            self.assertTrue(SeedLot.objects.filter(id=other_seedlot.id).exists())
 
     def test_unauthenticated_access(self):
         self.client.logout()

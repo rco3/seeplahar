@@ -1,6 +1,7 @@
 from django.test import TestCase
 from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event
 from taxon.models import Taxon, Variety
+from users.customer_context import CustomerContext
 from users.models import Customer, Partner
 from django.contrib.contenttypes.models import ContentType
 import uuid
@@ -11,31 +12,33 @@ class FarmModelTests(TestCase):
     def setUp(self):
         self.customer1 = Customer.objects.create(name='Galactic Gardeners')
         self.customer2 = Customer.objects.create(name='Martian Meadows')
-        self.partner = Partner.objects.create(name='Andorian Seedlings', customer=self.customer1)
 
-        self.taxon = Taxon.objects.create(
-            name='Romulan Lettuce',
-            species_name='Lactuca romulana',
-            type=Taxon.VEGETABLE,
-            description='A crisp, green lettuce with a slight metallic aftertaste',
-            customer=self.customer1
-        )
-        self.variety = Variety.objects.create(
-            name='Vulcan Crunch',
-            taxon=self.taxon,
-            description='Extra crispy variety, popular in Vulcan salads',
-            customer=self.customer1
-        )
-        self.seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name='Starfleet Seed Stock',
-            quantity=100,
-            units='grams',
-            date_received='2023-01-01',
-            origin='USS Enterprise Hydroponics Bay',
-            description='Prime seeds from the Enterprise',
-            customer=self.customer1
-        )
+        with CustomerContext(self.customer1):
+            self.partner = Partner.objects.create(name='Andorian Seedlings', customer=self.customer1)
+
+            self.taxon = Taxon.objects.create(
+                name='Romulan Lettuce',
+                species_name='Lactuca romulana',
+                type=Taxon.VEGETABLE,
+                description='A crisp, green lettuce with a slight metallic aftertaste',
+                customer=self.customer1
+            )
+            self.variety = Variety.objects.create(
+                name='Vulcan Crunch',
+                taxon=self.taxon,
+                description='Extra crispy variety, popular in Vulcan salads',
+                customer=self.customer1
+            )
+            self.seedlot = SeedLot.objects.create(
+                variety=self.variety,
+                name='Starfleet Seed Stock',
+                quantity=100,
+                units='grams',
+                date_received='2023-01-01',
+                vendor='USS Enterprise Hydroponics Bay',
+                description='Prime seeds from the Enterprise',
+                customer=self.customer1
+            )
 
     def test_seedlot_creation(self):
         self.assertEqual(self.seedlot.name, 'Starfleet Seed Stock')
@@ -50,21 +53,22 @@ class FarmModelTests(TestCase):
 
 
     def test_harvest_creation(self):
-        plant = Planting.objects.create(
-            variety=self.variety,
-            date='2023-01-01',
-            status='growing',
-            source_content_type=ContentType.objects.get_for_model(SeedLot),
-            source_object_id=self.seedlot.id,
-            customer=self.customer1
-        )
-        harvest = Harvest.objects.create(
-            date='2023-02-01',
-            quantity=50,
-            units='kg',
-            description='First harvest of Romulan Lettuce',
-            customer=self.customer1
-        )
+        with CustomerContext(self.customer1):
+            plant = Planting.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                status='growing',
+                source_content_type=ContentType.objects.get_for_model(SeedLot),
+                source_object_id=self.seedlot.id,
+                customer=self.customer1
+            )
+            harvest = Harvest.objects.create(
+                date='2023-02-01',
+                quantity=50,
+                units='kg',
+                description='First harvest of Romulan Lettuce',
+                customer=self.customer1
+            )
         harvest.plants.add(plant)
         self.assertEqual(harvest.quantity, 50)
         self.assertEqual(harvest.units, 'kg')
@@ -72,34 +76,41 @@ class FarmModelTests(TestCase):
         self.assertIn(plant, harvest.plants.all())
 
     def test_seedling_batch_creation(self):
-        seedling_batch = SeedlingBatch.objects.create(
-            seed_lot=self.seedlot,
-            date='2023-01-01',
-            quantity=200,
-            units='seeds',
-            status='germinating',
-            customer=self.customer1
-        )
+        with CustomerContext(self.customer1):
+            seedling_batch = SeedlingBatch.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                quantity=200,
+                units='seeds',
+                location='Greenhouse 3',
+                vendor='Vulcan Propagation Collective',
+                source_content_type=ContentType.objects.get_for_model(SeedLot),
+                source_object_id=self.seedlot.id,
+                customer=self.customer1
+            )
         self.assertEqual(seedling_batch.quantity, 200)
         self.assertEqual(seedling_batch.units, 'seeds')
         self.assertEqual(seedling_batch.customer, self.customer1)
+        self.assertEqual(seedling_batch.vendor, 'Vulcan Propagation Collective')
+        self.assertEqual(seedling_batch.source, self.seedlot)
 
     def test_event_creation(self):
-        planting = Planting.objects.create(
-            variety=self.variety,
-            date=timezone.now(),
-            location="Hydroponics Bay 1",
-            status="growing",
-            customer=self.customer1
-        )
-        event = Event.objects.create(
-            type="fertilizing",
-            date=timezone.now(),
-            description="Fertilized Andorian Blue Peas",
-            content_type=ContentType.objects.get_for_model(Planting),
-            object_id=planting.id,
-            customer=self.customer1
-        )
+        with CustomerContext(self.customer1):
+            planting = Planting.objects.create(
+                variety=self.variety,
+                date=timezone.now(),
+                location="Hydroponics Bay 1",
+                status="growing",
+                customer=self.customer1
+            )
+            event = Event.objects.create(
+                type="fertilizing",
+                date=timezone.now(),
+                description="Fertilized Andorian Blue Peas",
+                content_type=ContentType.objects.get_for_model(Planting),
+                object_id=planting.id,
+                customer=self.customer1
+            )
         self.assertIsNotNone(event)
         self.assertEqual(event.type, "fertilizing")
         self.assertEqual(event.description, "Fertilized Andorian Blue Peas")
@@ -109,58 +120,64 @@ class FarmModelTests(TestCase):
 
     def test_seedlot_customer_isolation(self):
         # Create objects for both customers
-        alien_seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name="Klingon Battle Seeds",
-            quantity=50,
-            units="grams",
-            customer=self.customer2  # Explicitly set customer like Taxon does
-        )
+        with CustomerContext(self.customer2):
+            alien_seedlot = SeedLot.objects.create(
+                variety=self.variety,
+                name="Klingon Battle Seeds",
+                quantity=50,
+                units="grams",
+                vendor='Qo\'noS Agro Cooperative',
+                customer=self.customer2  # Explicitly set customer like Taxon does
+            )
         self.assertEqual(SeedLot.objects.filter(customer=self.customer1).count(), 1)
         self.assertEqual(SeedLot.objects.filter(customer=self.customer2).count(), 1)
 
     def test_customer_isolation(self):
-        plant1 = Planting.objects.create(
-            variety=self.variety,
-            date='2023-01-01',
-            status='growing',
-            source_content_type=ContentType.objects.get_for_model(SeedLot),
-            source_object_id=self.seedlot.id,
-            customer=self.customer1
-        )
-        plant2 = Planting.objects.create(
-            variety=self.variety,
-            date='2023-01-01',
-            status='growing',
-            source_partner=self.partner,
-            customer=self.customer2
-        )
+        with CustomerContext(self.customer1):
+            plant1 = Planting.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                status='growing',
+                source_content_type=ContentType.objects.get_for_model(SeedLot),
+                source_object_id=self.seedlot.id,
+                customer=self.customer1
+            )
+        with CustomerContext(self.customer2):
+            plant2 = Planting.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                status='growing',
+                source_partner=self.partner,
+                customer=self.customer2
+            )
         self.assertEqual(Planting.objects.filter(customer=self.customer1).count(), 1)
         self.assertEqual(Planting.objects.filter(customer=self.customer2).count(), 1)
 
     def test_plant_creation_from_seedlot(self):
-        plant = Planting.objects.create(
-            variety=self.variety,
-            date='2023-01-01',
-            location='Holodeck Garden Simulation',
-            status='growing',
-            source_content_type=ContentType.objects.get_for_model(SeedLot),
-            source_object_id=self.seedlot.id,
-            customer=self.customer1  # Match setUp customer
-        )
+        with CustomerContext(self.customer1):
+            plant = Planting.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                location='Holodeck Garden Simulation',
+                status='growing',
+                source_content_type=ContentType.objects.get_for_model(SeedLot),
+                source_object_id=self.seedlot.id,
+                customer=self.customer1  # Match setUp customer
+            )
         self.assertEqual(plant.location, 'Holodeck Garden Simulation')
         self.assertEqual(plant.status, 'growing')
         self.assertEqual(plant.source, self.seedlot)
 
     def test_plant_creation_from_partner(self):
-        plant = Planting.objects.create(
-            variety=self.variety,
-            date='2023-01-01',
-            location='Alien Botanical Gardens',
-            status='growing',
-            source_partner=self.partner,
-            customer=self.customer1  # Match setUp customer
-        )
+        with CustomerContext(self.customer1):
+            plant = Planting.objects.create(
+                variety=self.variety,
+                date='2023-01-01',
+                location='Alien Botanical Gardens',
+                status='growing',
+                source_partner=self.partner,
+                customer=self.customer1  # Match setUp customer
+            )
         self.assertEqual(plant.location, 'Alien Botanical Gardens')
         self.assertEqual(plant.status, 'growing')
         self.assertEqual(plant.source_partner, self.partner)

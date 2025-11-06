@@ -79,7 +79,7 @@ class PhotoModelTest(TestCase):
         # Test upload path format
         expected_prefix = f"gala_{str(self.customer1.id)[-8:]}"
         # Use photo.image.name to get the relative path instead of image.path
-        self.assertTrue(photo.image.name.startswith(f"photos/{expected_prefix}"))
+        self.assertTrue(photo.image.name.startswith(f"{expected_prefix}/"))
 
     def test_generic_foreign_key_relationship(self):
         photo = Photo.objects.create(

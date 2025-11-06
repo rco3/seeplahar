@@ -16,7 +16,20 @@ urlpatterns = [
         template_name='farm/seedlot_detail.html'
     ), name='seedlot_detail'),
     path('seedlots/add/', SeedLotCreateView.as_view(), name='seedlot_create'),
-    path('seedlots/<uuid:pk>/update/', GenericUpdateView.as_view(model=SeedLot, fields=['variety', 'name', 'quantity', 'units', 'date_received', 'origin', 'description', 'source_partner', 'source']), name='seedlot_update'),
+    path('seedlots/<uuid:pk>/update/', GenericUpdateView.as_view(
+        model=SeedLot,
+        fields=[
+            'variety',
+            'name',
+            'quantity',
+            'units',
+            'date_received',
+            'vendor',
+            'description',
+            'source_partner',
+            'source_content_type',
+            'source_object_id',
+        ]), name='seedlot_update'),
     path('seedlots/<uuid:pk>/delete/', GenericDeleteView.as_view(model=SeedLot), name='seedlot_delete'),
 
     # Planting URLs
@@ -37,7 +50,20 @@ urlpatterns = [
     path('seedlingbatches/', GenericListView.as_view(model=SeedlingBatch), name='seedlingbatch_list'),
     path('seedlingbatches/<uuid:pk>/', GenericDetailView.as_view(model=SeedlingBatch), name='seedlingbatch_detail'),
     path('seedlingbatches/add/', SeedlingBatchCreateView.as_view(), name='seedlingbatch_create'),
-    path('seedlingbatches/<uuid:pk>/update/', GenericUpdateView.as_view(model=SeedlingBatch, fields=['seed_lot', 'date', 'quantity', 'units', 'location', 'status', 'parent_batch', 'source', 'variety']), name='seedlingbatch_update'),
+    path('seedlingbatches/<uuid:pk>/update/', GenericUpdateView.as_view(
+        model=SeedlingBatch,
+        fields=[
+            'variety',
+            'date',
+            'quantity',
+            'units',
+            'location',
+            'parent_batch',
+            'vendor',
+            'source_partner',
+            'source_content_type',
+            'source_object_id',
+        ]), name='seedlingbatch_update'),
     path('seedlingbatches/<uuid:pk>/delete/', GenericDeleteView.as_view(model=SeedlingBatch), name='seedlingbatch_delete'),
 
     # Event URLs

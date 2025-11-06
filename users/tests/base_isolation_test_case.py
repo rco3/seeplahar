@@ -6,7 +6,7 @@ from users.models import Customer
 from users.middleware import CustomerMiddleware
 from seeplahar.views.generic import GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, \
     GenericDeleteView
-from users.customer_context import get_current_customer, set_current_customer
+from users.customer_context import CustomerContext, get_current_customer, set_current_customer
 import logging
 
 User = get_user_model()
@@ -38,13 +38,13 @@ class BaseIsolationTest(TestCase):
         self.customer1 = Customer.objects.create(name='Test Customer 1')
         self.customer2 = Customer.objects.create(name='Test Customer 2')
 
-        # Create a user for each customer
-        self.user1 = User.objects.create_user(username='testuser1', password='testpass1', customer=self.customer1)
-        self.user2 = User.objects.create_user(username='testuser2', password='testpass2', customer=self.customer2)
-
-        # Create an object for each customer
-        self.object1 = self.model.objects.create(name='Test Object 1', customer=self.customer1)
-        self.object2 = self.model.objects.create(name='Test Object 2', customer=self.customer2)
+        # Create a user and object for each customer within explicit contexts
+        with CustomerContext(self.customer1):
+            self.user1 = User.objects.create_user(username='testuser1', password='testpass1', customer=self.customer1)
+            self.object1 = self.model.objects.create(name='Test Object 1', customer=self.customer1)
+        with CustomerContext(self.customer2):
+            self.user2 = User.objects.create_user(username='testuser2', password='testpass2', customer=self.customer2)
+            self.object2 = self.model.objects.create(name='Test Object 2', customer=self.customer2)
 
     def apply_middleware(self, request):
         middleware = CustomerMiddleware(lambda r: None)
@@ -186,8 +186,9 @@ class BaseIsolationTest(TestCase):
             GenericDeleteView.as_view(model=self.model)(request, pk=self.object2.pk)
         print(f"BaseIsolationTest: After view (other object), current customer: {get_current_customer()}")
 
-        self.assertTrue(self.model.objects.filter(pk=self.object2.pk).exists(),
-                        "Other customer's object should not be deleted")
+        with CustomerContext(self.customer2):
+            self.assertTrue(self.model.objects.filter(pk=self.object2.pk).exists(),
+                            "Other customer's object should not be deleted")
 
         middleware = CustomerMiddleware(lambda r: None)
         middleware.process_response(request, HttpResponse())  # Use a dummy response

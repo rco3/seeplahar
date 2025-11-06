@@ -90,7 +90,7 @@ def seedlot_label_template(seedlot, qr_base64):
 
   <!-- SeedLot details - right side, right justified -->
   <text x="1098" y="280" font-family="Arial, sans-serif" font-size="42" fill="black" text-anchor="end">
-    Source: {seedlot.origin or "Unknown"}
+    Source: {seedlot.vendor or (seedlot.source_partner.name if seedlot.source_partner else "Unknown")}
   </text>
   <text x="1098" y="325" font-family="Arial, sans-serif" font-size="42" fill="black" text-anchor="end">
     Received: {seedlot.date_received or "Unknown"}

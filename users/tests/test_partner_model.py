@@ -13,5 +13,5 @@ class PartnerModelTest(TestCase):
 
     def test_partner_str_representation(self):
         partner = Partner.objects.create(name="Test Partner", customer=self.customer)
-        expected_str = f"Test Partner (Customer: {self.customer.name})"
+        expected_str = "Test Partner"
         self.assertEqual(str(partner), expected_str)

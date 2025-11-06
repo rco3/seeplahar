@@ -1,6 +1,6 @@
 # media/views.py
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 from django.contrib.contenttypes.models import ContentType
@@ -43,6 +43,8 @@ def add_photo(request, object_type, object_id):
             'object_id': object_id
         })
 
+    except Http404:
+        raise
     except Exception as e:
         print(f"Error in add_photo: {type(e)} - {str(e)}")
         return HttpResponse(str(e), status=500)

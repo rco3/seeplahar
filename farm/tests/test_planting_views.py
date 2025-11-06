@@ -2,8 +2,10 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
+
 from farm.models import SeedLot, Planting
 from taxon.models import Taxon, Variety
+from users.customer_context import CustomerContext
 from users.models import Customer
 from django.utils import timezone
 
@@ -14,38 +16,42 @@ class PlantingViewsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
-        self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
-        self.client.login(username="picard", password="earlgrey")
+        with CustomerContext(self.customer):
+            self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
 
-        self.taxon = Taxon.objects.create(
-            name="Andorian Blue Peas",
-            species_name="Pisum andorii",
-            type=Taxon.VEGETABLE,
-            description="A vibrant blue pea from Andoria",
-            customer=self.customer
-        )
-        self.variety = Variety.objects.create(
-            name="Frost Resistant",
-            taxon=self.taxon,
-            description="Variety that can withstand extreme cold",
-            customer=self.customer
-        )
-        self.seedlot = SeedLot.objects.create(
-            variety=self.variety,
-            name="Andorian Blue Pea Seeds Batch 1",
-            quantity=100,
-            units="grams",
-            customer=self.customer
-        )
-        self.planting = Planting.objects.create(
-            variety=self.variety,
-            date=timezone.now(),
-            location="Hydroponics Bay 1",
-            status="growing",
-            source_content_type=ContentType.objects.get_for_model(SeedLot),
-            source_object_id=self.seedlot.id,
-            customer=self.customer
-        )
+            self.taxon = Taxon.objects.create(
+                name="Andorian Blue Peas",
+                species_name="Pisum andorii",
+                type=Taxon.VEGETABLE,
+                description="A vibrant blue pea from Andoria",
+                customer=self.customer
+            )
+            self.variety = Variety.objects.create(
+                name="Frost Resistant",
+                taxon=self.taxon,
+                description="Variety that can withstand extreme cold",
+                customer=self.customer
+            )
+            self.seedlot = SeedLot.objects.create(
+                variety=self.variety,
+                name="Andorian Blue Pea Seeds Batch 1",
+                quantity=100,
+                units="grams",
+                vendor="Starfleet Seed Cooperative",
+                customer=self.customer
+            )
+            seedlot_ct = ContentType.objects.get_for_model(SeedLot)
+            self.planting = Planting.objects.create(
+                variety=self.variety,
+                date=timezone.now(),
+                location="Hydroponics Bay 1",
+                status="growing",
+                source_content_type=seedlot_ct,
+                source_object_id=self.seedlot.id,
+                customer=self.customer
+            )
+
+        self.client.login(username="picard", password="earlgrey")
 
     def test_planting_list_view(self):
         response = self.client.get(reverse('farm:planting_list'))

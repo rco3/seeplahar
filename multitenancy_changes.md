@@ -120,3 +120,27 @@ Key changes:
 - Consistent use of customer context throughout the application
 - Improved separation of concerns between middleware, views, and forms
 - Enhanced testing to catch customer assignment issues early
+## 2025-11-05: Tenant-Aware Test and Template Refactor
+
+Files changed:
+- farm/tests/base.py
+- farm/tests/test_models.py
+- farm/tests/test_seedlot_views.py
+- farm/tests/test_seedling_batch.py
+- farm/tests/test_views.py
+- farm/tests/test_planting_views.py
+- farm/tests/test_harvest_views.py
+- farm/tests/test_event_views.py
+- media/tests/test_photo.py
+- shop/tests/test_views.py
+- seeplahar/tests/test_views.py
+- users/tests/base_isolation_test_case.py
+- users/tests/test_partner_model.py
+- farm/templates/farm/seedlot_list.html
+
+Updates:
+- Wrapped multitenant fixtures and request factories in `CustomerContext` to ensure tests create data with the active customer, aligning coverage with new guardrails.
+- Replaced legacy `origin` assertions with the new `vendor`/`source_partner` fields across farm, shop, and shared tests to match the updated schema.
+- Updated the seedlot list template to display vendor/source information, resolving template errors triggered by the removed field.
+- Strengthened tenant isolation tests to prove protected deletions leave foreign-customer records intact and rely on the tenant-aware URL structure.
+- Adjusted media upload expectations to the customer-prefixed storage paths introduced by the new photo handler.

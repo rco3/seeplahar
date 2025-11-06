@@ -59,10 +59,12 @@ class CustomerAwareQuerySet(QuerySet):
 
 class CustomerAwareManager(models.Manager):
     def get_queryset(self):
-        return CustomerAwareQuerySet(self.model, using=self._db)
+        queryset = CustomerAwareQuerySet(self.model, using=self._db)
+        customer = get_current_customer()
+        return queryset.filter(customer=customer) if customer else queryset
 
     def filter_by_current_customer(self):
-        return self.get_queryset().filter_by_current_customer()
+        return CustomerAwareQuerySet(self.model, using=self._db).filter_by_current_customer()
 
 
 class CustomerAwareModel(models.Model):
@@ -77,7 +79,8 @@ class CustomerAwareModel(models.Model):
     def save(self, *args, **kwargs):
         if not self.customer_id:
             current_customer = get_current_customer()
-            print(f"Saving {self.__class__.__name__}. Current customer: {current_customer}")
+            if not current_customer:
+                raise ValidationError("No customer in context for CustomerAwareModel save")
             self.customer = current_customer
         super().save(*args, **kwargs)
 

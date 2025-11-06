@@ -32,7 +32,13 @@
                     </td>
                     <td class="px-6 py-4">
                         <a href="{% url 'farm:seedlot_detail' pk=seedlot.id %}" class="text-blue-600 hover:underline">
-                            {{ seedlot.origin }}
+                            {% if seedlot.vendor %}
+                                {{ seedlot.vendor }}
+                            {% elif seedlot.source_partner %}
+                                {{ seedlot.source_partner.name }}
+                            {% else %}
+                                Unknown
+                            {% endif %}
                         </a>
                     </td>
                     <td class="px-6 py-4">{{ seedlot.quantity }} {{ seedlot.units }}</td>

@@ -2,8 +2,10 @@ from django.contrib.contenttypes.models import ContentType
 from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
+
 from farm.models import Planting, Event
 from taxon.models import Taxon, Variety
+from users.customer_context import CustomerContext
 from users.models import Customer
 from django.utils import timezone
 
@@ -14,37 +16,39 @@ class EventViewsTestCase(TestCase):
     def setUp(self):
         self.client = Client()
         self.customer = Customer.objects.create(name="Starfleet Gardens")
-        self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
-        self.client.login(username="picard", password="earlgrey")
 
-        self.taxon = Taxon.objects.create(
-            name="Andorian Blue Peas",
-            species_name="Pisum andorii",
-            type=Taxon.VEGETABLE,
-            description="A vibrant blue pea from Andoria",
-            customer=self.customer
-        )
-        self.variety = Variety.objects.create(
-            name="Frost Resistant",
-            taxon=self.taxon,
-            description="Variety that can withstand extreme cold",
-            customer=self.customer
-        )
-        self.planting = Planting.objects.create(
-            variety=self.variety,
-            date=timezone.now(),
-            location="Hydroponics Bay 1",
-            status="growing",
-            customer=self.customer
-        )
-        self.event = Event.objects.create(
-            type="watering",
-            date=timezone.now(),
-            description="Watered Andorian Blue Peas",
-            content_type=ContentType.objects.get_for_model(Planting),
-            object_id=self.planting.id,
-            customer=self.customer
-        )
+        with CustomerContext(self.customer):
+            self.user = User.objects.create_user(username="picard", password="earlgrey", customer=self.customer)
+            self.taxon = Taxon.objects.create(
+                name="Andorian Blue Peas",
+                species_name="Pisum andorii",
+                type=Taxon.VEGETABLE,
+                description="A vibrant blue pea from Andoria",
+                customer=self.customer
+            )
+            self.variety = Variety.objects.create(
+                name="Frost Resistant",
+                taxon=self.taxon,
+                description="Variety that can withstand extreme cold",
+                customer=self.customer
+            )
+            self.planting = Planting.objects.create(
+                variety=self.variety,
+                date=timezone.now(),
+                location="Hydroponics Bay 1",
+                status="growing",
+                customer=self.customer
+            )
+            self.event = Event.objects.create(
+                type="watering",
+                date=timezone.now(),
+                description="Watered Andorian Blue Peas",
+                content_type=ContentType.objects.get_for_model(Planting),
+                object_id=self.planting.id,
+                customer=self.customer
+            )
+
+        self.client.login(username="picard", password="earlgrey")
 
     def test_event_create_view(self):
         data = {
