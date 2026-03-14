@@ -84,13 +84,13 @@ class UniversalDetailView(View):
     def get(self, request, pk):
         customer = get_current_customer()
 
-        # Define all models to search, in order of priority
+        # (model_class, app_label, model_name matching _meta.model_name)
         models_to_check = [
             # Farm operations (most commonly scanned)
-            (SeedLot, 'farm', 'seedlots'),        # seedlot -> seedlots
-            (Planting, 'farm', 'plantings'),      # planting -> plantings (if needed)
-            (Harvest, 'farm', 'harvests'),        # harvest -> harvests (if needed)
-            (SeedlingBatch, 'farm', 'seedlingbatches'),  # etc
+            (SeedLot, 'farm', 'seedlot'),
+            (Planting, 'farm', 'planting'),
+            (Harvest, 'farm', 'harvest'),
+            (SeedlingBatch, 'farm', 'seedlingbatch'),
 
             # Taxonomy (less frequently scanned directly)
             (Variety, 'taxon', 'variety'),
@@ -102,51 +102,9 @@ class UniversalDetailView(View):
 
         for model_class, app_label, model_name in models_to_check:
             try:
-                # Check if object exists with this UUID for current customer
-                if hasattr(model_class, 'customer'):
-                    obj = model_class.objects.get(pk=pk, customer=customer)
-                else:
-                    # For models without customer field (shouldn't happen in your system)
-                    obj = model_class.objects.get(pk=pk)
-
-                # Found it! Redirect to the appropriate detail view
-                return redirect('generic_detail', app_name=app_label, model_name=model_name, pk=pk)
-
+                model_class.objects.get(pk=pk, customer=customer)
+                return redirect(f'{app_label}:{model_name}_detail', pk=pk)
             except model_class.DoesNotExist:
-                # Not found in this model, try the next one
                 continue
 
-        # If we get here, the UUID wasn't found in any model
         raise Http404(f"No object found with ID {pk}")
-
-
-# Alternative implementation if you prefer a function-based view:
-def universal_detail_view(request, pk):
-    """
-    Function-based version of universal UUID lookup
-    """
-    customer = get_current_customer()
-
-    models_to_check = [
-        (SeedLot, 'farm', 'seedlot'),
-        (Planting, 'farm', 'planting'),
-        (Harvest, 'farm', 'harvest'),
-        (SeedlingBatch, 'farm', 'seedlingbatch'),
-        (Variety, 'taxon', 'variety'),
-        (Taxon, 'taxon', 'taxon'),
-        (Partner, 'users', 'partner'),
-    ]
-
-    for model_class, app_label, model_name in models_to_check:
-        try:
-            if hasattr(model_class, 'customer'):
-                obj = model_class.objects.get(pk=pk, customer=customer)
-            else:
-                obj = model_class.objects.get(pk=pk)
-
-            return redirect('generic_detail', app_name=app_label, model_name=model_name, pk=pk)
-
-        except model_class.DoesNotExist:
-            continue
-
-    raise Http404(f"No object found with ID {pk}")

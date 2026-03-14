@@ -5,6 +5,7 @@ from django.utils import timezone
 
 from taxon.models import Variety, Taxon
 from farm.models import SeedLot
+from farm.tests.base import FarmBaseTestCase
 from users.customer_context import CustomerContext
 from users.models import Customer
 import uuid
@@ -80,4 +81,98 @@ class GenericDetailViewTests(TestCase):
             response = self.client.get(
                 reverse('generic_detail', args=['taxon', 'taxon', str(invalid_uuid)])
             )
+        self.assertEqual(response.status_code, 404)
+
+
+class UniversalDetailViewTests(FarmBaseTestCase):
+    """
+    Tests for the /<uuid>/ universal QR scan entry point.
+    Each entity type should redirect to its named detail URL.
+    Cross-tenant UUIDs and unknown UUIDs should 404.
+    """
+
+    def setUp(self):
+        super().setUp()
+        self.login_test_user()
+
+    def _universal_url(self, pk):
+        return reverse('universal-detail', kwargs={'pk': pk})
+
+    # --- per-entity redirect tests ---
+
+    def test_seedlot_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.seedlot.id))
+        self.assertRedirects(
+            response,
+            reverse('farm:seedlot_detail', kwargs={'pk': self.seedlot.id}),
+            fetch_redirect_response=False,
+        )
+
+    def test_planting_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.planting.id))
+        self.assertRedirects(
+            response,
+            reverse('farm:planting_detail', kwargs={'pk': self.planting.id}),
+            fetch_redirect_response=False,
+        )
+
+    def test_harvest_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.harvest.id))
+        self.assertRedirects(
+            response,
+            reverse('farm:harvest_detail', kwargs={'pk': self.harvest.id}),
+            fetch_redirect_response=False,
+        )
+
+    def test_seedlingbatch_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.seedling_batch.id))
+        self.assertRedirects(
+            response,
+            reverse('farm:seedlingbatch_detail', kwargs={'pk': self.seedling_batch.id}),
+            fetch_redirect_response=False,
+        )
+
+    def test_variety_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.variety.id))
+        self.assertRedirects(
+            response,
+            reverse('taxon:variety_detail', kwargs={'pk': self.variety.id}),
+            fetch_redirect_response=False,
+        )
+
+    def test_taxon_redirects_to_detail(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(self.taxon.id))
+        self.assertRedirects(
+            response,
+            reverse('taxon:taxon_detail', kwargs={'pk': self.taxon.id}),
+            fetch_redirect_response=False,
+        )
+
+    # --- failure cases ---
+
+    def test_unknown_uuid_returns_404(self):
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(uuid.uuid4()))
+        self.assertEqual(response.status_code, 404)
+
+    def test_other_tenant_uuid_returns_404(self):
+        """Worf's seedlot UUID should be invisible to Picard."""
+        with CustomerContext(self.other_customer):
+            other_seedlot = SeedLot.objects.create(
+                variety=self.variety,
+                name='Klingon Battle Seeds',
+                quantity=50,
+                vendor='House Martok',
+                date_received=timezone.now().date(),
+                customer=self.other_customer,
+            )
+        # Picard is logged in (setUp calls login_test_user)
+        with CustomerContext(self.customer):
+            response = self.client.get(self._universal_url(other_seedlot.id))
         self.assertEqual(response.status_code, 404)
