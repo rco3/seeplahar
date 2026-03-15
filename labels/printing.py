@@ -124,8 +124,8 @@ def _print_svg_to_dymo450(svg_content, printer_name):
 
         # Send to printer
         result = subprocess.run(
-            ['lpr', '-P', printer_name, '-o', 'media=30256',
-             '-o', 'PrintDensity=Medium', '-o', 'ppi=300', png_path],
+            ['lpr', '-P', printer_name, '-o', 'PageSize=w167h288',
+             '-o', 'DymoPrintDensity=Normal', '-o', 'Resolution=300dpi', png_path],
             capture_output=True, text=True,
         )
         if result.returncode != 0:
