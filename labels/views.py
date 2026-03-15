@@ -1,10 +1,10 @@
 from django.views import View
-from django.http import Http404, HttpResponse
+from django.http import Http404, HttpResponse, JsonResponse
 from django.contrib.auth.mixins import LoginRequiredMixin
 from .utils import generate_qr_code, generate_label_svg
 from django.contrib import messages
 from django.shortcuts import redirect
-from .printing import print_label
+from .printing import print_label, diagnose, PrintingError
 from django.shortcuts import get_object_or_404
 from farm.models import SeedLot, Planting, Harvest, SeedlingBatch
 from django.apps import apps
@@ -67,9 +67,18 @@ class PrintLabelView(LoginRequiredMixin, View):
         model = apps.get_model(app_label, model_name)
         obj = get_object_or_404(model, pk=pk)
 
-        print_label(obj, request)
+        try:
+            print_label(obj, request)
+            messages.success(request, f"Label sent to printer for {obj}")
+        except PrintingError as e:
+            messages.error(request, f"Print failed: {e}")
+        except Exception as e:
+            messages.error(request, f"Unexpected print error: {e}")
 
-        messages.success(request, f"Label printed for {obj}")
-        # labels/views.py - fix the redirect
-        # In PrintLabelView, instead of generic_detail:
         return redirect(f'{app_label}:{model_name}_detail', pk=pk)
+
+
+class DiagnoseView(LoginRequiredMixin, View):
+    """GET /labels/diagnose/ — returns JSON with printing environment info."""
+    def get(self, request):
+        return JsonResponse(diagnose())

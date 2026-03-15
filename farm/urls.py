@@ -1,6 +1,6 @@
 from django.urls import path
 from seeplahar.views.generic import GenericListView, GenericDetailView, GenericCreateView, GenericUpdateView, GenericDeleteView
-from .models import SeedLot, Planting, Harvest, SeedlingBatch, Event
+from .models import SeedLot, Planting, Harvest, SeedlingBatch, Event, Location
 from .views import IntakeView, EventCreateView, EventUpdateView, SeedlingBatchCreateView, SeedLotCreateView
 
 app_name = 'farm'
@@ -72,6 +72,13 @@ urlpatterns = [
     path('events/add/', EventCreateView.as_view(), name='event_create'),
     path('events/<uuid:pk>/update/', EventUpdateView.as_view(), name='event_update'),
     path('events/<uuid:pk>/delete/', GenericDeleteView.as_view(model=Event), name='event_delete'),
+
+    # Location URLs
+    path('locations/', GenericListView.as_view(model=Location), name='location_list'),
+    path('locations/<uuid:pk>/', GenericDetailView.as_view(model=Location), name='location_detail'),
+    path('locations/add/', GenericCreateView.as_view(model=Location, fields=['name', 'description', 'parent']), name='location_create'),
+    path('locations/<uuid:pk>/update/', GenericUpdateView.as_view(model=Location, fields=['name', 'description', 'parent']), name='location_update'),
+    path('locations/<uuid:pk>/delete/', GenericDeleteView.as_view(model=Location), name='location_delete'),
 
     # Special views
     path('intake/', IntakeView.as_view(), name='intake'),

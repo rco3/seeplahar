@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Event, Harvest, Planting, SeedLot, SeedlingBatch
+from .models import Event, Harvest, Planting, SeedLot, SeedlingBatch, Location
 from users.admin import CustomerAwareAdmin
 
 @admin.register(Event)
@@ -31,3 +31,8 @@ class SeedLotAdmin(CustomerAwareAdmin):
 class SeedlingBatchAdmin(CustomerAwareAdmin):
     list_display = ('source', 'variety', 'quantity', 'units', 'date')
     list_filter = ('date',)
+
+@admin.register(Location)
+class LocationAdmin(CustomerAwareAdmin):
+    list_display = ('name', 'parent', 'description')
+    list_filter = ('parent',)

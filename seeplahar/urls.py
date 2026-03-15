@@ -29,6 +29,7 @@ from autocomplete import HTMXAutoComplete
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path('api/', include('seeplahar.api_urls')),
     path('', HomePageView.as_view(), name='home'),
     path("__reload__/", include("django_browser_reload.urls")),
     path('media/', include('media.urls', namespace='media')),

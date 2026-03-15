@@ -3,14 +3,12 @@ psycopg2-binary
 python-decouple
 qrcode[pil]
 django-tailwind[reload]
-psycopg2-binary
-pytest
-pytest-django
-python-decouple
 djangorestframework
-djangorestframework-jwt
+djangorestframework-simplejwt
 django-htmx-autocomplete
 pillow
 reportlab
 svglib
 weasyprint
+gunicorn
+whitenoise

@@ -20,9 +20,9 @@
                     <td>{{ object|getattribute:field.name }}</td>
                 {% endfor %}
                 <td>
-                    <a href="{% url 'generic_detail' app_label model_name object.pk %}">View</a>
-                    <a href="{% url 'generic_update' app_label model_name object.pk %}">Edit</a>
-                    <a href="{% url 'generic_delete' app_label model_name object.pk %}">Delete</a>
+                    <a href="{% url detail_url_name object.pk %}">View</a>
+                    <a href="{% url update_url_name object.pk %}">Edit</a>
+                    <a href="{% url delete_url_name object.pk %}">Delete</a>
                 </td>
             </tr>
         {% empty %}
@@ -31,5 +31,5 @@
     </tbody>
 </table>
 
-<a href="{% url 'generic_create' app_label model_name %}">Create New {{ model_name|title }}</a>
+<a href="{% url create_url_name %}">Create New {{ model_verbose_name|title }}</a>
 {% endblock %}
