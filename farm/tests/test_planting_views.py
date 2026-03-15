@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from farm.models import SeedLot, Planting
+from farm.models import SeedLot, Planting, Location
 from taxon.models import Taxon, Variety
 from users.customer_context import CustomerContext
 from users.models import Customer
@@ -41,10 +41,11 @@ class PlantingViewsTestCase(TestCase):
                 customer=self.customer
             )
             seedlot_ct = ContentType.objects.get_for_model(SeedLot)
+            self.location = Location.objects.create(name="Hydroponics Bay 1", customer=self.customer)
             self.planting = Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Hydroponics Bay 1",
+                location=self.location,
                 status="growing",
                 source_content_type=seedlot_ct,
                 source_object_id=self.seedlot.id,
@@ -64,31 +65,35 @@ class PlantingViewsTestCase(TestCase):
         self.assertContains(response, "Hydroponics Bay 1")
 
     def test_planting_create_view(self):
+        with CustomerContext(self.customer):
+            location2 = Location.objects.create(name="Hydroponics Bay 2", customer=self.customer)
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
-            'location': 'Hydroponics Bay 2',
+            'location': str(location2.id),
             'status': 'growing',
             'source_type': 'seedlot',
             'source_id': self.seedlot.id,
         }
         response = self.client.post(reverse('farm:planting_create'), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
-        created_planting = Planting.objects.filter(location='Hydroponics Bay 2').first()
+        created_planting = Planting.objects.filter(location=location2).first()
         self.assertIsNotNone(created_planting)
         self.assertEqual(created_planting.customer, self.customer)
 
     def test_planting_update_view(self):
+        with CustomerContext(self.customer):
+            updated_location = Location.objects.create(name="Updated Location", customer=self.customer)
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
-            'location': 'Updated Location',
+            'location': str(updated_location.id),
             'status': 'harvested',
         }
         response = self.client.post(reverse('farm:planting_update', args=[self.planting.id]), data)
         self.assertEqual(response.status_code, 302)  # Redirect on success
         self.planting.refresh_from_db()
-        self.assertEqual(self.planting.location, 'Updated Location')
+        self.assertEqual(self.planting.location, updated_location)
 
     def test_planting_delete_view(self):
         response = self.client.post(reverse('farm:planting_delete', args=[self.planting.id]))

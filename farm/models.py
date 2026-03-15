@@ -8,6 +8,7 @@ from datetime import datetime
 from media.models import Photo
 from django.contrib.contenttypes.fields import GenericForeignKey
 from django.contrib.contenttypes.models import ContentType
+from django.conf import settings
 
 # farm/models.py
 
@@ -33,6 +34,10 @@ class SeedLot(CustomerAwareModel):
     source_object_id = models.UUIDField(null=True, blank=True)
     source = GenericForeignKey('source_content_type', 'source_object_id')
 
+    location = models.ForeignKey(
+        'Location', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='seed_lots',
+    )
     photos = models.ManyToManyField(Photo, blank=True, related_name='seed_lots')
 
     def __str__(self):
@@ -70,7 +75,10 @@ class Planting(CustomerAwareModel):
     source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True, related_name='sourced_plantings')
     variety = models.ForeignKey('taxon.Variety', null=True, blank=True, on_delete=models.CASCADE)
     date = models.DateField(default=datetime.now)
-    location = models.CharField(max_length=255, null=True, blank=True)
+    location = models.ForeignKey(
+        'Location', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='plantings',
+    )
     status = models.CharField(max_length=50, choices=[('growing', 'Growing'), ('harvested', 'Harvested'), ('failed', 'Failed')], default='growing')
     photos = models.ManyToManyField(Photo, blank=True, related_name='plantings')
     quantity = models.PositiveIntegerField(default=1)
@@ -82,7 +90,8 @@ class Planting(CustomerAwareModel):
     source = GenericForeignKey('source_content_type', 'source_object_id')
 
     def __str__(self):
-        return f'{self.variety.name} - {self.location} ({self.quantity})'
+        location_name = self.location.name if self.location else 'No location'
+        return f'{self.variety.name} - {location_name} ({self.quantity})'
 
 
 class Location(CustomerAwareModel):
@@ -95,14 +104,63 @@ class Location(CustomerAwareModel):
         return self.name
 
 
+class HarvestContainer(CustomerAwareModel):
+    """A physical container (bag, basket, bin, etc.) identified by a UUID label.
+
+    Containers are reusable. History is reconstructed by querying all Harvests
+    that reference this container via Harvest.container FK.
+    """
+    CONTAINER_TYPES = [
+        ('bag', 'Bag'),
+        ('basket', 'Basket'),
+        ('bin', 'Bin'),
+        ('jug', 'Jug'),
+        ('tray', 'Tray'),
+        ('other', 'Other'),
+    ]
+    STATUS_CHOICES = [
+        ('available', 'Available'),
+        ('in_use', 'In Use'),
+        ('dispatched', 'Dispatched'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=100, blank=True)
+    container_type = models.CharField(max_length=50, choices=CONTAINER_TYPES, default='other')
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='available')
+    location = models.ForeignKey(
+        Location, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='stored_containers',
+    )
+
+    def __str__(self):
+        return self.name if self.name else f"{self.get_container_type_display()} ({str(self.id)[:8]})"
+
+    @property
+    def history(self):
+        """All harvests ever associated with this container, newest first."""
+        return list(Harvest.objects.filter(container=self).order_by('-date'))
+
+
 class Harvest(CustomerAwareModel):
+    STATUS_CHOICES = [
+        ('placeholder', 'Placeholder'),
+        ('in_progress', 'In Progress'),
+        ('complete', 'Complete'),
+    ]
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     plants = models.ManyToManyField('Planting', related_name='harvests')
     variety = models.ForeignKey('taxon.Variety', on_delete=models.SET_NULL, null=True, blank=True)
     date = models.DateField(default=datetime.now)
-    quantity = models.DecimalField(max_digits=10, decimal_places=2)
+    quantity = models.DecimalField(max_digits=10, decimal_places=2, default=0)
     units = models.CharField(max_length=50, null=True, blank=True)
     description = models.TextField(blank=True, null=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='in_progress')
+    container = models.ForeignKey(
+        'HarvestContainer', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='harvests',
+    )
     photos = models.ManyToManyField(Photo, blank=True, related_name='harvests')
     source_partner = models.ForeignKey(Partner, on_delete=models.SET_NULL, null=True, blank=True, related_name='sourced_harvests')
 
@@ -120,7 +178,6 @@ class SeedlingBatch(CustomerAwareModel):
     date = models.DateField(default=datetime.now)
     quantity = models.DecimalField(max_digits=10, decimal_places=2)
     units = models.CharField(max_length=50, default='seeds')
-    location = models.CharField(max_length=100, null=True, blank=True)
     parent_batch = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True,
                                      related_name='child_batches')
 
@@ -134,6 +191,10 @@ class SeedlingBatch(CustomerAwareModel):
                                                                                  'seedlingbatch']))
     source_object_id = models.UUIDField(null=True, blank=True)
     source = GenericForeignKey('source_content_type', 'source_object_id')
+    location = models.ForeignKey(
+        'Location', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='seedling_batches',
+    )
 
     photos = models.ManyToManyField(Photo, blank=True, related_name='seedling_batches')
 
@@ -161,6 +222,10 @@ class Event(CustomerAwareModel):
     content_type = models.ForeignKey(ContentType, on_delete=models.CASCADE)
     object_id = models.UUIDField()
     related_item = GenericForeignKey('content_type', 'object_id')
+    operator = models.ForeignKey(
+        settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='events_performed',
+    )
 
     def __str__(self):
         return f'Event: {self.type} on {self.date}'

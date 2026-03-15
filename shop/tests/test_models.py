@@ -1,8 +1,9 @@
 from django.test import TestCase
 from shop.models import SeedPackage, ProducePackage, PlantPackage
-from farm.models import SeedLot, Harvest, Planting
+from farm.models import SeedLot, Harvest, Planting, Location
 from taxon.models import Taxon, Variety
 from users.models import Customer
+from users.customer_context import CustomerContext
 from django.utils import timezone
 
 class ShopModelsTestCase(TestCase):
@@ -26,13 +27,15 @@ class ShopModelsTestCase(TestCase):
             units="seeds",
             customer=self.customer
         )
-        self.planting = Planting.objects.create(
-            variety=self.variety,
-            date=timezone.now(),
-            location="Test Location",
-            status="growing",
-            customer=self.customer
-        )
+        with CustomerContext(self.customer):
+            self.location = Location.objects.create(name="Test Location", customer=self.customer)
+            self.planting = Planting.objects.create(
+                variety=self.variety,
+                date=timezone.now(),
+                location=self.location,
+                status="growing",
+                customer=self.customer
+            )
         self.harvest = Harvest.objects.create(
             variety=self.variety,
             date=timezone.now(),

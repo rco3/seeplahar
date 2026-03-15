@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from farm.models import SeedLot, SeedlingBatch
+from farm.models import SeedLot, SeedlingBatch, Location
 from taxon.models import Taxon, Variety
 from users.customer_context import CustomerContext
 from users.models import Customer
@@ -43,12 +43,13 @@ class SeedlingBatchViewsTestCase(TestCase):
             )
 
             seedlot_ct = ContentType.objects.get_for_model(SeedLot)
+            self.location = Location.objects.create(name="Propagation Bay 1", customer=self.customer)
             self.seedling_batch = SeedlingBatch.objects.create(
                 variety=self.variety,
                 date=timezone.now().date(),
                 quantity=50,
                 units="seedlings",
-                location="Propagation Bay 1",
+                location=self.location,
                 vendor="Starfleet Seed Cooperative",
                 source_content_type=seedlot_ct,
                 source_object_id=self.seedlot.id,
@@ -68,13 +69,15 @@ class SeedlingBatchViewsTestCase(TestCase):
         self.assertContains(response, "seedlings")
 
     def test_seedlingbatch_create_view(self):
+        with CustomerContext(self.customer):
+            location2 = Location.objects.create(name="Propagation Bay 2", customer=self.customer)
         seedlot_ct = ContentType.objects.get_for_model(SeedLot)
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
             'quantity': 30,
             'units': 'seedlings',
-            'location': 'Propagation Bay 2',
+            'location': str(location2.id),
             'parent_batch': '',
             'vendor': 'Propagation Vendor',
             'source_partner': '',
@@ -89,13 +92,15 @@ class SeedlingBatchViewsTestCase(TestCase):
         self.assertEqual(created_batch.source, self.seedlot)
 
     def test_seedlingbatch_update_view(self):
+        with CustomerContext(self.customer):
+            location3 = Location.objects.create(name="Propagation Bay 3", customer=self.customer)
         seedlot_ct = ContentType.objects.get_for_model(SeedLot)
         data = {
             'variety': self.variety.id,
             'date': timezone.now().date(),
             'quantity': 40,
             'units': 'seedlings',
-            'location': 'Propagation Bay 3',
+            'location': str(location3.id),
             'parent_batch': '',
             'vendor': 'Updated Vendor',
             'source_partner': '',

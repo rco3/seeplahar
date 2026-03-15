@@ -2,7 +2,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.utils.formats import date_format
 from shop.models import SeedPackage, ProducePackage, PlantPackage
-from farm.models import SeedLot, Harvest, Planting
+from farm.models import SeedLot, Harvest, Planting, Location
 from taxon.models import Variety, Taxon
 from users.customer_context import CustomerContext
 from users.models import Customer, User
@@ -35,10 +35,11 @@ class ShopViewsTestCase(TestCase):
                 vendor="Galactic Seeds",
                 customer=self.customer
             )
+            self.location = Location.objects.create(name="Test Location", customer=self.customer)
             self.planting = Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Test Location",
+                location=self.location,
                 status="growing",
                 customer=self.customer
             )

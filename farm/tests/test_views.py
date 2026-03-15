@@ -3,7 +3,7 @@ from django.urls import reverse
 from django.contrib.auth import get_user_model
 from django.contrib.contenttypes.models import ContentType
 
-from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event
+from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event, Location
 from taxon.models import Taxon, Variety
 from users.customer_context import CustomerContext
 from users.models import Customer, Partner
@@ -45,10 +45,11 @@ class FarmViewsTestCase(TestCase):
                 customer=self.customer1
             )
             seedlot_ct = ContentType.objects.get_for_model(SeedLot)
+            self.planting_location = Location.objects.create(name="Hydroponics Bay 1", customer=self.customer1)
             self.planting = Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Hydroponics Bay 1",
+                location=self.planting_location,
                 status="growing",
                 customer=self.customer1,
                 source_content_type=seedlot_ct,
@@ -63,12 +64,13 @@ class FarmViewsTestCase(TestCase):
             )
             self.harvest.plants.add(self.planting)
 
+            self.seedling_location = Location.objects.create(name="Propagation Bay 1", customer=self.customer1)
             self.seedling_batch = SeedlingBatch.objects.create(
                 variety=self.variety,
                 date=timezone.now().date(),
                 quantity=50,
                 units="seedlings",
-                location="Propagation Bay 1",
+                location=self.seedling_location,
                 vendor="Starfleet Seed Cooperative",
                 source_content_type=seedlot_ct,
                 source_object_id=self.seedlot.id,
@@ -84,10 +86,11 @@ class FarmViewsTestCase(TestCase):
     def test_customer_isolation(self):
         # Create a planting for customer2
         with CustomerContext(self.customer2):
+            klingon_location = Location.objects.create(name="Klingon Battle Cruiser Garden", customer=self.customer2)
             Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Klingon Battle Cruiser Garden",
+                location=klingon_location,
                 status="growing",
                 customer=self.customer2
             )

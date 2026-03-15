@@ -188,3 +188,31 @@ class WebPresence(ContactInfo):
 
     def __str__(self):
         return f"{self.contact_function} - {self.url}"
+
+
+class CustomerSetting(models.Model):
+    """Per-customer key/value configuration (e.g. dedup_window_seconds=300)."""
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='settings')
+    key = models.CharField(max_length=100)
+    value = models.CharField(max_length=500)
+
+    class Meta:
+        unique_together = [('customer', 'key')]
+
+    def __str__(self):
+        return f"{self.customer} · {self.key}={self.value}"
+
+    @classmethod
+    def get(cls, customer, key, default=None):
+        try:
+            return cls.objects.get(customer=customer, key=key).value
+        except cls.DoesNotExist:
+            return default
+
+    @classmethod
+    def set(cls, customer, key, value):
+        obj, _ = cls.objects.update_or_create(
+            customer=customer, key=key,
+            defaults={'value': str(value)},
+        )
+        return obj

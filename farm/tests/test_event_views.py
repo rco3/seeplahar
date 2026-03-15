@@ -3,7 +3,7 @@ from django.test import TestCase, Client
 from django.urls import reverse
 from django.contrib.auth import get_user_model
 
-from farm.models import Planting, Event
+from farm.models import Planting, Event, Location
 from taxon.models import Taxon, Variety
 from users.customer_context import CustomerContext
 from users.models import Customer
@@ -32,10 +32,11 @@ class EventViewsTestCase(TestCase):
                 description="Variety that can withstand extreme cold",
                 customer=self.customer
             )
+            self.location = Location.objects.create(name="Hydroponics Bay 1", customer=self.customer)
             self.planting = Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Hydroponics Bay 1",
+                location=self.location,
                 status="growing",
                 customer=self.customer
             )

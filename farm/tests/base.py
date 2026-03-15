@@ -6,7 +6,7 @@ from django.contrib.contenttypes.models import ContentType
 from users.customer_context import CustomerContext
 from users.models import Customer
 from taxon.models import Taxon, Variety
-from farm.models import SeedLot, Planting, Harvest, SeedlingBatch
+from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Location
 
 User = get_user_model()
 
@@ -50,6 +50,16 @@ class FarmBaseTestCase(TestCase):
                 customer=self.customer
             )
 
+            # Create base locations
+            self.location = Location.objects.create(
+                name="Hydroponics Bay 1",
+                customer=self.customer,
+            )
+            self.other_location = Location.objects.create(
+                name="Propagation Deck",
+                customer=self.customer,
+            )
+
             # Create base farm objects
             self.seedlot = SeedLot.objects.create(
                 variety=self.variety,
@@ -64,7 +74,7 @@ class FarmBaseTestCase(TestCase):
             self.planting = Planting.objects.create(
                 variety=self.variety,
                 date="2024-01-01",
-                location="Hydroponics Bay 1",
+                location=self.location,
                 status="growing",
                 customer=self.customer,
                 source_content_type=seedlot_ct,
@@ -76,7 +86,7 @@ class FarmBaseTestCase(TestCase):
                 date="2024-01-01",
                 quantity=50,
                 units="seedlings",
-                location="Propagation Deck",
+                location=self.other_location,
                 vendor="Starfleet Seed Cooperative",
                 source_content_type=seedlot_ct,
                 source_object_id=self.seedlot.id,

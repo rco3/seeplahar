@@ -1,5 +1,5 @@
 from django.test import TestCase
-from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event
+from farm.models import SeedLot, Planting, Harvest, SeedlingBatch, Event, Location
 from taxon.models import Taxon, Variety
 from users.customer_context import CustomerContext
 from users.models import Customer, Partner
@@ -77,12 +77,13 @@ class FarmModelTests(TestCase):
 
     def test_seedling_batch_creation(self):
         with CustomerContext(self.customer1):
+            location = Location.objects.create(name='Greenhouse 3', customer=self.customer1)
             seedling_batch = SeedlingBatch.objects.create(
                 variety=self.variety,
                 date='2023-01-01',
                 quantity=200,
                 units='seeds',
-                location='Greenhouse 3',
+                location=location,
                 vendor='Vulcan Propagation Collective',
                 source_content_type=ContentType.objects.get_for_model(SeedLot),
                 source_object_id=self.seedlot.id,
@@ -96,10 +97,11 @@ class FarmModelTests(TestCase):
 
     def test_event_creation(self):
         with CustomerContext(self.customer1):
+            location = Location.objects.create(name='Hydroponics Bay 1', customer=self.customer1)
             planting = Planting.objects.create(
                 variety=self.variety,
                 date=timezone.now(),
-                location="Hydroponics Bay 1",
+                location=location,
                 status="growing",
                 customer=self.customer1
             )
@@ -155,29 +157,31 @@ class FarmModelTests(TestCase):
 
     def test_plant_creation_from_seedlot(self):
         with CustomerContext(self.customer1):
+            location = Location.objects.create(name='Holodeck Garden Simulation', customer=self.customer1)
             plant = Planting.objects.create(
                 variety=self.variety,
                 date='2023-01-01',
-                location='Holodeck Garden Simulation',
+                location=location,
                 status='growing',
                 source_content_type=ContentType.objects.get_for_model(SeedLot),
                 source_object_id=self.seedlot.id,
                 customer=self.customer1  # Match setUp customer
             )
-        self.assertEqual(plant.location, 'Holodeck Garden Simulation')
+        self.assertEqual(plant.location, location)
         self.assertEqual(plant.status, 'growing')
         self.assertEqual(plant.source, self.seedlot)
 
     def test_plant_creation_from_partner(self):
         with CustomerContext(self.customer1):
+            location = Location.objects.create(name='Alien Botanical Gardens', customer=self.customer1)
             plant = Planting.objects.create(
                 variety=self.variety,
                 date='2023-01-01',
-                location='Alien Botanical Gardens',
+                location=location,
                 status='growing',
                 source_partner=self.partner,
                 customer=self.customer1  # Match setUp customer
             )
-        self.assertEqual(plant.location, 'Alien Botanical Gardens')
+        self.assertEqual(plant.location, location)
         self.assertEqual(plant.status, 'growing')
         self.assertEqual(plant.source_partner, self.partner)
