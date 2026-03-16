@@ -65,6 +65,18 @@ class Taxon(CustomerAwareModel):
     def __str__(self):
         return self.name
 
+    @property
+    def hero_image(self):
+        """Own most-recent photo, or fall back to the first variety that has one."""
+        photo = self.photos.order_by('-uploaded_at').first()
+        if photo:
+            return photo
+        for variety in self.varieties.all():
+            photo = variety.photos.order_by('-uploaded_at').first()
+            if photo:
+                return photo
+        return None
+
     class Meta:
         verbose_name_plural = "Taxa"
 
@@ -81,6 +93,10 @@ class Variety(CustomerAwareModel):
 
     def __str__(self):
         return self.name
+
+    @property
+    def hero_image(self):
+        return self.photos.order_by('-uploaded_at').first()
 
     class Meta:
         verbose_name_plural = "Varieties"

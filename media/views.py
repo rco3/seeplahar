@@ -1,13 +1,35 @@
 # media/views.py
+import io
+import os
+
 from django.shortcuts import get_object_or_404
 from django.http import Http404, HttpResponse
 from django.template.response import TemplateResponse
 from django.contrib.auth.decorators import permission_required
 from django.contrib.contenttypes.models import ContentType
+from django.core.files.uploadedfile import InMemoryUploadedFile
 from django.apps import apps
 from django.views.decorators.csrf import csrf_exempt
+from PIL import Image
 
 from .models import Photo
+
+
+def _resize_image(uploaded_file, max_px=1920):
+    img = Image.open(uploaded_file)
+    if img.mode in ('RGBA', 'LA'):
+        # Paste onto white background to handle transparency (PIL defaults to black)
+        background = Image.new('RGB', img.size, (255, 255, 255))
+        background.paste(img, mask=img.split()[-1])
+        img = background
+    elif img.mode != 'RGB':
+        img = img.convert('RGB')
+    img.thumbnail((max_px, max_px), Image.LANCZOS)
+    buf = io.BytesIO()
+    img.save(buf, format='JPEG', quality=85, optimize=True)
+    buf.seek(0)
+    name = os.path.splitext(uploaded_file.name)[0] + '.jpg'
+    return InMemoryUploadedFile(buf, 'ImageField', name, 'image/jpeg', buf.getbuffer().nbytes, None)
 
 
 @permission_required('media.add_photo')
@@ -26,7 +48,7 @@ def add_photo(request, object_type, object_id):
 
         # Create the photo
         photo = Photo.objects.create(
-            image=request.FILES['file'],  # Dropzone uses 'file'
+            image=_resize_image(request.FILES['file']),
             customer=request.user.customer,
             content_type=ContentType.objects.get_for_model(model),
             object_id=object_id
@@ -56,10 +78,21 @@ def get_photos(request, object_type, object_id):
     obj = get_object_or_404(model, id=object_id)
 
     return TemplateResponse(request, 'media/photos.html', {
-        'photos': obj.photos.all(),
+        'photos': obj.photos.order_by('-uploaded_at'),
         'object_type': object_type,
         'object_id': object_id
     })
+
+@permission_required('media.view_photo')
+def get_photos_edit(request, object_type, object_id):
+    model = apps.get_model(object_type)
+    obj = get_object_or_404(model, id=object_id)
+    return TemplateResponse(request, 'media/photos_edit.html', {
+        'photos': obj.photos.order_by('-uploaded_at'),
+        'object_type': object_type,
+        'object_id': object_id,
+    })
+
 
 @csrf_exempt
 @permission_required('media.delete_photo')
@@ -69,13 +102,18 @@ def delete_photo(request, photo_id):
 
     photo = get_object_or_404(Photo, id=photo_id)
 
-    # Check if user has permission to modify the related object
+    # Capture everything needed before deletion
     content_type = photo.content_type
+    object_id = photo.object_id
+    object_type = f'{content_type.app_label}.{content_type.model}'
+    model = content_type.model_class()
+
     perm = f'{content_type.app_label}.change_{content_type.model}'
-    print(perm)
     if not request.user.has_perm(perm):
-        print("What you talking bout, Willis?")
         return HttpResponse(status=403)
 
     photo.delete()
-    return HttpResponse(status=204)  # 204 No Content
+
+    response = HttpResponse(status=200)
+    response['HX-Trigger'] = 'photoDeleted'
+    return response

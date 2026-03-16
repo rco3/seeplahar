@@ -1,24 +1,64 @@
 {# media/photos.html #}
 {% load permissions %}
 
-<div id="{{ object_type }}-photos-{{ object_id }}"
-     class="dropzone min-h-64 min-w-full bg-gray-100"
-     data-url="{% url 'media:add_photo' object_type=object_type object_id=object_id %}">
+<div id="photos-{{ object_type|cut:'.' }}-{{ object_id }}"
+     hx-trigger="photoUploaded from:body, photoDeleted from:body"
+     hx-get="{% url 'media:get_photos' object_type=object_type object_id=object_id %}"
+     hx-swap="outerHTML">
 
-  <div id="photo-gallery-{{ object_id }}"
-       hx-trigger="photoUploaded from:body"
-       hx-get="{% url 'media:get_photos' object_type=object_type object_id=object_id %}"
-       hx-swap="innerHTML">
+  {# Hero — drop target and click-to-upload #}
+  <div class="relative overflow-hidden rounded-lg bg-gray-100 cursor-pointer"
+       style="min-height: 16rem;"
+       data-upload-url="{% url 'media:add_photo' object_type=object_type object_id=object_id %}">
 
     {% if photos %}
-      {% for photo in photos %}
-        {% include "media/photo_snippet.html" %}
-      {% endfor %}
+      <img src="{{ photos.0.image.url }}" alt=""
+           class="w-full max-h-96 object-cover block">
+      <div class="absolute inset-0 flex items-center justify-center pointer-events-none"
+           style="background:rgba(0,0,0,0); transition:background 0.2s;"
+           onmouseenter="this.style.background='rgba(0,0,0,0.3)'"
+           onmouseleave="this.style.background='rgba(0,0,0,0)'">
+        <span class="text-white text-sm font-medium" style="opacity:0; transition:opacity 0.2s;"
+              onmouseenter="this.style.opacity='1'"
+              onmouseleave="this.style.opacity='0'">Drop or click to replace</span>
+      </div>
+      {% if user|has_perm:'media.delete_photo' %}
+        <button style="position:absolute;top:4px;right:4px;z-index:10;
+                       background:rgba(0,0,0,0.6);color:white;border:none;
+                       border-radius:3px;padding:2px 6px;cursor:pointer;font-size:0.75rem;"
+                hx-delete="{% url 'media:delete_photo' photos.0.id %}"
+                hx-target="#photos-{{ object_type|cut:'.' }}-{{ object_id }}"
+                hx-swap="outerHTML">×</button>
+      {% endif %}
+    {% else %}
+      <div class="flex flex-col items-center justify-center text-gray-400 pointer-events-none"
+           style="height:16rem;">
+        <svg class="h-10 w-10 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <p class="text-sm">Drop or click to upload a photo</p>
+      </div>
     {% endif %}
 
-    <div class="text-gray-600">
-        Drop photos here or click to upload
+    {# Hidden file input — triggered by click handler in dropzone_assets.html #}
+    <input type="file" accept="image/*" style="display:none;">
+
+    {# Loading overlay — shown during upload #}
+    <div class="upload-loading absolute inset-0 flex items-center justify-center pointer-events-none"
+         style="display:none; background:rgba(0,0,0,0.4);">
+      <span class="text-white text-sm font-medium">Uploading…</span>
     </div>
 
   </div>
+
+  {# Thumbnails — photos after the hero #}
+  {% if photos|length > 1 %}
+    <div class="flex flex-wrap gap-2 mt-2">
+      {% for photo in photos|slice:"1:" %}
+        {% include "media/photo_snippet.html" %}
+      {% endfor %}
+    </div>
+  {% endif %}
+
 </div>

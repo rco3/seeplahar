@@ -1,64 +1,84 @@
 {% load static %}
-<link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
-<script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
 <script>
-  // Disable auto-discovery immediately
-  Dropzone.autoDiscover = false;
-</script>
-<script>
-// Use an immediately executed function to avoid conflicts
-(function() {
-  // Wait for DOM to be fully loaded
-  document.addEventListener('DOMContentLoaded', function() {
-    function initializeDropzones(context) {
-      context.querySelectorAll('.dropzone').forEach(function(el) {
-        // Skip if already initialized
-        if (el.dropzone) {
-          console.log('Dropzone already initialized, skipping:', el);
-          return;
-        }
-        
-        // Get URL directly from attribute
-        var uploadUrl = el.getAttribute('data-url');
-        if (!uploadUrl) {
-          console.error('Dropzone element missing data-url attribute:', el);
-          return;
-        }
-        
-        console.log('Initializing dropzone with URL:', uploadUrl);
-        
-        try {
-          // Create new Dropzone with explicit URL
-          new Dropzone(el, {
-            url: uploadUrl,
-            headers: {
-              'X-CSRFToken': '{{ csrf_token }}'
-            },
-            dictDefaultMessage: "Drop files here or click to upload",
-            success: function(file, response) {
-              document.body.dispatchEvent(new Event('photoUploaded', {bubbles: true}));
-              this.removeFile(file);
-            },
-            error: function(file, errorMessage) {
-              console.error("Upload error:", errorMessage);
-              this.removeFile(file);
-            }
-          });
-        } catch (e) {
-          console.error('Error initializing Dropzone:', e);
-        }
-      });
-    }
-    
-    // Initialize on page load with slight delay to ensure DOM is ready
-    setTimeout(function() {
-      initializeDropzones(document);
-    }, 100);
-    
-    // Reinitialize after htmx swaps
-    document.addEventListener('htmx:afterSwap', function(event) {
-      initializeDropzones(event.target);
+(function () {
+  'use strict';
+
+  function getCsrfToken() {
+    var m = document.cookie.match(/csrftoken=([^;]+)/);
+    return m ? m[1] : '';
+  }
+
+  function uploadFile(heroEl, file) {
+    if (!file || !file.type.startsWith('image/')) return;
+
+    var loading = heroEl.querySelector('.upload-loading');
+    if (loading) loading.style.display = 'flex';
+    heroEl.style.pointerEvents = 'none';
+
+    var formData = new FormData();
+    formData.append('file', file);
+
+    fetch(heroEl.dataset.uploadUrl, {
+      method: 'POST',
+      headers: { 'X-CSRFToken': getCsrfToken() },
+      body: formData
+    }).then(function (resp) {
+      if (!resp.ok) return resp.text().then(function (t) { throw new Error(t); });
+      document.body.dispatchEvent(new Event('photoUploaded', { bubbles: true }));
+    }).catch(function (err) {
+      console.error('Photo upload failed:', err);
+      if (loading) loading.style.display = 'none';
+      heroEl.style.pointerEvents = '';
     });
+  }
+
+  // Drag over — prevent browser default (opening the file)
+  document.addEventListener('dragover', function (e) {
+    var hero = e.target.closest('[data-upload-url]');
+    if (!hero) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'copy';
+    hero.style.outline = '2px solid #60a5fa';
   });
+
+  document.addEventListener('dragenter', function (e) {
+    var hero = e.target.closest('[data-upload-url]');
+    if (hero) hero.style.outline = '2px solid #60a5fa';
+  });
+
+  document.addEventListener('dragleave', function (e) {
+    var hero = e.target.closest('[data-upload-url]');
+    if (hero && !hero.contains(e.relatedTarget)) {
+      hero.style.outline = '';
+    }
+  });
+
+  document.addEventListener('drop', function (e) {
+    var hero = e.target.closest('[data-upload-url]');
+    if (!hero) return;
+    e.preventDefault();
+    hero.style.outline = '';
+    uploadFile(hero, e.dataTransfer.files[0]);
+  });
+
+  // Click to open file picker
+  document.addEventListener('click', function (e) {
+    if (e.target.type === 'file') return;          // avoid re-triggering
+    if (e.target.closest('button, a')) return;     // don't intercept controls
+    var hero = e.target.closest('[data-upload-url]');
+    if (!hero) return;
+    var input = hero.querySelector('input[type="file"]');
+    if (input) input.click();
+  });
+
+  // File input selection
+  document.addEventListener('change', function (e) {
+    if (e.target.type !== 'file') return;
+    var hero = e.target.closest('[data-upload-url]');
+    if (!hero) return;
+    uploadFile(hero, e.target.files[0]);
+    e.target.value = '';
+  });
+
 })();
 </script>

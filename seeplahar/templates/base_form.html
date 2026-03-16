@@ -1,13 +1,21 @@
 {% extends "base.html" %}
+{% load custom_tags %}
 
 {% block content %}
   <h1>{{ action }} {{ model_name|title }}</h1>
-  
+
   <form method="post">
     {% csrf_token %}
     {{ form.as_p }}
     <button type="submit">Save</button>
   </form>
-  
+
+  {% if object and object|hasattr:'photos' %}
+    <div style="margin-top:1.5rem;border-top:1px solid #e5e7eb;padding-top:1rem;">
+      <h3 style="font-size:1rem;font-weight:600;margin-bottom:0.5rem;">Photos</h3>
+      {% include "media/photos_edit.html" with object_type=app_label|add:'.'|add:model_name object_id=object.pk photos=object.photos.all %}
+    </div>
+  {% endif %}
+
   <a href="{% url app_label|add:':'|add:model_name|add:'_list' %}">Cancel</a>
 {% endblock %}

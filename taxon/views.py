@@ -107,7 +107,7 @@ class TaxonListView(GenericListView):
                 queryset = queryset.filter(type__in=['annual', 'perennial'])
             else:
                 queryset = queryset.filter(type=taxon_type)
-        return queryset
+        return queryset.prefetch_related('photos', 'varieties__photos')
 
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
@@ -126,7 +126,9 @@ class VarietyListView(GenericListView):
         return context
 
     def get_queryset(self):
-        return super().get_queryset().filter(taxon_id=self.kwargs.get('taxon_id'))
+        return super().get_queryset().filter(
+            taxon_id=self.kwargs.get('taxon_id')
+        ).prefetch_related('photos')
 
 
 class VarietyDeleteView(GenericDeleteView):
@@ -145,7 +147,6 @@ class VarietyDetailView(GenericDetailView):
     def get_context_data(self, **kwargs):
         context = super().get_context_data(**kwargs)
         context['seed_lots'] = SeedLot.objects.filter(variety=self.object)
-        # Expose app_label and model_name for use in the template.
         context['app_label'] = self.object._meta.app_label
         context['model_name'] = self.object._meta.model_name
         return context

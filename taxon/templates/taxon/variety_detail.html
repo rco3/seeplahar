@@ -3,8 +3,7 @@
 {% load permissions %}
 
 {% block extra_head %}
-  <link rel="stylesheet" href="https://unpkg.com/dropzone@5/dist/min/dropzone.min.css" type="text/css" />
-  <script src="https://unpkg.com/dropzone@5/dist/min/dropzone.min.js"></script>
+  {% include "dropzone_assets.html" %}
 {% endblock %}
 
 {% block title %}{{ variety.name }} - Seeplahar{% endblock %}
@@ -12,15 +11,15 @@
 {% block content %}
 <div class="container mx-auto p-4 bg-primary-lighter rounded-lg">
     <div class="bg-white shadow-lg rounded-lg overflow-hidden flex">
-        <!-- Left side with variety details - unchanged -->
+        <!-- Left side with variety details -->
         <div class="w-2/3 p-4">
             <div class="flex items-center justify-between bg-primary-light p-4 mb-4 rounded-t-lg">
                 <h1 class="text-4xl font-bold text-primary-dark">{{ variety.name }}</h1>
                 <a href="{% url 'taxon:taxon_detail' pk=variety.taxon.id %}" class="text-primary-dark hover:underline">{{ variety.taxon.name }}</a>
                 <a href="{% url 'taxon:variety_update' pk=variety.pk %}"
-           class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 ml-4">
-           Edit
-        </a>
+                   class="bg-blue-500 text-white px-3 py-1 rounded hover:bg-blue-600 ml-4">
+                   Edit
+                </a>
             </div>
             <div class="p-4">
                 <p class="text-primary-dark">{{ variety.description }}</p>
@@ -65,90 +64,10 @@
         </div>
 
         <!-- Right side with photos -->
-        <div class="w-1/3 p-4 flex flex-col items-center">
+        <div class="w-1/3 p-4">
             <h3 class="text-xl font-semibold mb-4">Photos</h3>
-
-            <!-- Photo dropzone area -->
-            <div class="w-full border-2 border-dashed border-gray-400 rounded p-4 mb-4 dropzone-container">
-                <div id="variety-photos-dropzone" class="dropzone-container" data-url="/media/add_photo/taxon.Variety/c8a59be8-e560-49dd-b3d0-b24062e6f6a9/">
-                  <div class="dz-message" data-dz-message>
-                    <span>Drop files here or click to upload</span>
-                  </div>
-                </div>
-            </div>
-
-            <!-- Photo gallery -->
-            <div id="photo-gallery" class="grid grid-cols-2 gap-2 w-full">
-                {% for photo in object.photos.all %}
-                    <div class="relative photo-item">
-                        <img src="{{ photo.image.url }}" class="w-full h-32 object-cover rounded" alt="{{ photo.description|default:'Photo' }}">
-                        {% if user|has_perm:'media.delete_photo' %}
-                            <button class="absolute top-1 right-1 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
-                                    hx-delete="{% url 'media:delete_photo' photo.id %}"
-                                    hx-target="closest .photo-item"
-                                    hx-swap="outerHTML">×</button>
-                        {% endif %}
-                    </div>
-                {% endfor %}
-            </div>
+            {% include "media/photos.html" with object_type=app_label|add:'.'|add:model_name object_id=object.pk photos=object.photos.all %}
         </div>
     </div>
 </div>
-{% endblock %}
-
-{% block extra_js %}
-<script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Configure Dropzone
-        Dropzone.autoDiscover = false;
-
-        // Get the element
-        const dropzoneElement = document.getElementById('variety-photos-dropzone');
-
-        // Check if element exists and doesn't already have a Dropzone instance
-        if (dropzoneElement && !dropzoneElement.dropzone) {
-            // Get the URL directly from the data attribute
-            const uploadUrl = dropzoneElement.getAttribute('data-url');
-
-            if (!uploadUrl) {
-                console.error("No URL provided for Dropzone");
-                return;
-            }
-
-            const photoDropzone = new Dropzone(dropzoneElement, {
-                url: uploadUrl,
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}'
-                },
-                paramName: "file",
-                maxFilesize: 5,
-                acceptedFiles: "image/*",
-                addRemoveLinks: false,
-                dictDefaultMessage: "Drop files here or click to upload",
-                success: function(file, response) {
-                    console.log("File uploaded successfully:", file.name);
-
-                    // Add the new photo to the gallery
-                    const photoGallery = document.getElementById('photo-gallery');
-                    if (photoGallery) {
-                        const tempContainer = document.createElement('div');
-                        tempContainer.innerHTML = response;
-                        photoGallery.insertAdjacentHTML('afterbegin', tempContainer.innerHTML);
-                    }
-
-                    this.removeFile(file);
-                },
-                error: function(file, errorMessage) {
-                    console.error("Error uploading file:", errorMessage);
-                    alert("Error uploading file: " + errorMessage);
-                    this.removeFile(file);
-                }
-            });
-        } else if (dropzoneElement) {
-            console.log("Dropzone already initialized on this element");
-        } else {
-            console.error("Dropzone element not found");
-        }
-    });
-</script>
 {% endblock %}

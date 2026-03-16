@@ -8,7 +8,7 @@ from autocomplete import HTMXAutoComplete, widgets
 class VarietyForm(forms.ModelForm):
     class Meta:
         model = Variety
-        fields = ['name', 'taxon', 'description', 'photos']
+        fields = ['name', 'taxon', 'description']
 
 class CharacteristicForm(forms.ModelForm):
     class Meta:

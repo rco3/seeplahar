@@ -1,13 +1,22 @@
 {% extends "base.html" %}
 {% load static %}
+
 {% block title %}{{ taxon.name }} Varieties{% endblock %}
 
 {% block content %}
 <h1 class="text-2xl font-bold mb-4">{{ taxon.name }} Varieties</h1>
 <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 p-4">
     {% for variety in varieties %}
-    <a href="{% url 'taxon:variety_detail' pk=variety.id %}" class="relative group block bg-white rounded-lg shadow-lg overflow-hidden">
-        <img src="{% static 'images/' %}{{ variety.name|lower }}.jpg" alt="{{ variety.name }}" class="w-full h-40 object-cover">
+    <a href="{% url 'taxon:variety_detail' pk=variety.id %}"
+       class="relative group block bg-white rounded-lg shadow-lg overflow-hidden">
+        {% if variety.hero_image %}
+            <img src="{{ variety.hero_image.image.url }}" alt="{{ variety.name }}"
+                 class="w-full h-40 object-cover">
+        {% else %}
+            <div class="w-full h-40 bg-gray-200 flex items-center justify-center">
+                <span class="text-gray-400 text-sm">{{ variety.name }}</span>
+            </div>
+        {% endif %}
         <div class="p-4">
             <h2 class="text-lg font-semibold">{{ variety.name }}</h2>
             <p class="text-sm text-gray-600">{{ variety.description }}</p>
